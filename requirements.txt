@@ -1,3 +1,6 @@
 Flask>=3.0.0
 reportlab>=4.0.0
+<<<<<<< HEAD
 gunicorn>=21.2.0
+=======
+>>>>>>> 0bcb51135c51373570700f15fa2a49577f2cca56
