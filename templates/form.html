@@ -1,0 +1,577 @@
+{% extends "base.html" %}
+
+{% block title %}PJzen | Handoff Comercial → Onboarding & Operação{% endblock %}
+
+{% block content %}
+<!-- Header Original PJzen -->
+<header class="header-card">
+  <div class="header-top-row">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo PJzen" class="brand-logo">
+    <div class="brand-info">
+      <div class="brand-title">
+        <span>PJzen | HANDOFF COMERCIAL → ONBOARDING & OPERAÇÃO</span>
+        {% if is_edit %}
+          {% if sub.status_tecnico == 'enviado' %}
+            <span class="status-badge enviado">Enviado (v{{ sub.version }})</span>
+          {% else %}
+            <span class="status-badge rascunho">Rascunho (v{{ sub.version }})</span>
+          {% endif %}
+        {% endif %}
+      </div>
+      <p class="brand-subtitle">Diagnóstico de entrada • preencher antes de transferir o cliente</p>
+      <span class="brand-tagline">Sua vida PJ mais zen</span>
+    </div>
+  </div>
+</header>
+
+<!-- Form Container -->
+<form id="handoff-form" 
+      data-edit-token="{{ sub.edit_token if sub else '' }}" 
+      data-view-token="{{ sub.view_token if sub else '' }}"
+      data-version="{{ sub.version if sub else 1 }}">
+
+  <!-- Campo Obrigatório de Quem Preenche e Contatos (Antes das quatro seções) -->
+  <div class="name-highlight-card" id="name-card">
+    <div class="form-group">
+      <label class="field-label" for="nome_preenchedor">
+        Nome de quem está preenchendo <span class="required-badge">* (Obrigatório para enviar)</span>
+      </label>
+      <input type="text" 
+             id="nome_preenchedor" 
+             name="nome_preenchedor" 
+             class="form-control" 
+             placeholder="Informe seu nome"
+             value="{{ sub.nome_preenchedor if sub else '' }}" 
+             autocomplete="name">
+      <div id="name-error-msg" style="display: none; color: var(--status-danger); font-size: 0.85rem; font-weight: 600; margin-top: 4px;"></div>
+    </div>
+
+    <div class="form-grid-2" style="margin-top: 14px;">
+      <div class="form-group">
+        <label class="field-label" for="email_preenchedor">
+          E-mail do destinatário / registrador <span class="optional-hint">(para envio automático do comprovante)</span>
+        </label>
+        <input type="email" 
+               id="email_preenchedor" 
+               name="email_preenchedor" 
+               class="form-control" 
+               placeholder="seu.email@exemplo.com.br"
+               value="{{ sub.email_preenchedor if sub else '' }}" 
+               autocomplete="email">
+      </div>
+
+      <div class="form-group">
+        <label class="field-label" for="telefone_preenchedor">
+          Telefone de contato <span class="optional-hint">(opcional)</span>
+        </label>
+        <input type="tel" 
+               id="telefone_preenchedor" 
+               name="telefone_preenchedor" 
+               class="form-control phone-mask" 
+               placeholder="(00) 00000-0000"
+               value="{{ sub.telefone_preenchedor if sub else '' }}" 
+               autocomplete="tel">
+      </div>
+    </div>
+
+    <div class="help-notice">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+      <div>
+        <strong>Apenas seu nome é obrigatório. As demais informações podem ser preenchidas depois.</strong><br>
+        O nome identifica quem fez o preenchimento; não substitui os responsáveis comercial, técnico ou de onboarding.
+      </div>
+    </div>
+  </div>
+
+  <!-- 01 IDENTIFICAÇÃO E CONTRATAÇÃO | Comercial -->
+  <section class="form-section">
+    <div class="section-header">01 IDENTIFICAÇÃO E CONTRATAÇÃO | Comercial</div>
+    <div class="section-body">
+      
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="field-label" for="cliente_razao_social">Cliente / Razão social <span class="optional-hint">(opcional)</span></label>
+          <input type="text" id="cliente_razao_social" name="cliente_razao_social" class="form-control" placeholder="Razão social ou nome fantasia" value="{{ sub.cliente_razao_social if sub else '' }}">
+        </div>
+
+        <div class="form-group">
+          <label class="field-label" for="cnpj">CNPJ (se houver) <span class="optional-hint">(opcional)</span></label>
+          <input type="text" id="cnpj" name="cnpj" class="form-control" placeholder="00.000.000/0000-00" value="{{ sub.cnpj if sub else '' }}">
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="field-label" for="email_cliente">E-mail do novo cliente <span class="optional-hint">(opcional)</span></label>
+          <input type="email" id="email_cliente" name="email_cliente" class="form-control" placeholder="contato@cliente.com.br" value="{{ sub.email_cliente if sub else '' }}">
+        </div>
+
+        <div class="form-group">
+          <label class="field-label" for="telefone_cliente">Telefone do novo cliente <span class="optional-hint">(opcional)</span></label>
+          <input type="tel" id="telefone_cliente" name="telefone_cliente" class="form-control phone-mask" placeholder="(00) 00000-0000" value="{{ sub.telefone_cliente if sub else '' }}">
+        </div>
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="field-label" for="responsavel_comercial">Responsável comercial <span class="optional-hint">(opcional)</span></label>
+          <input type="text" id="responsavel_comercial" name="responsavel_comercial" class="form-control" placeholder="Nome do responsável comercial" value="{{ sub.responsavel_comercial if sub else '' }}">
+        </div>
+
+        <div class="form-group">
+          <label class="field-label" for="data_repasse">Data do repasse <span class="optional-hint">(opcional)</span></label>
+          <input type="date" id="data_repasse" name="data_repasse" class="form-control" value="{{ sub.data_repasse if sub else '' }}">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="field-label">Tipo de demanda <span class="optional-hint">(opcional)</span></label>
+        <div class="checkbox-group">
+          {% set sel_tipo = sub.tipo_demanda if sub else [] %}
+          <label class="checkbox-label">
+            <input type="checkbox" name="tipo_demanda" value="Abertura" {% if 'Abertura' in sel_tipo %}checked{% endif %}>
+            Abertura
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="tipo_demanda" value="Troca de contador" {% if 'Troca de contador' in sel_tipo %}checked{% endif %}>
+            Troca de contador
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="tipo_demanda" value="Regularização / outro" {% if 'Regularização / outro' in sel_tipo %}checked{% endif %}>
+            Regularização / outro
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="field-label">Plano contratado <span class="optional-hint">(opcional)</span></label>
+        <div class="checkbox-group">
+          {% set sel_plano = sub.plano_contratado if sub else [] %}
+          <label class="checkbox-label">
+            <input type="checkbox" name="plano_contratado" value="PJzen Plus" {% if 'PJzen Plus' in sel_plano %}checked{% endif %}>
+            PJzen Plus
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="plano_contratado" value="PJzen Pro" {% if 'PJzen Pro' in sel_plano %}checked{% endif %}>
+            PJzen Pro
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="plano_contratado" value="PJzen One" {% if 'PJzen One' in sel_plano %}checked{% endif %}>
+            PJzen One
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="field-label">Faturamento mensal esperado <span class="optional-hint">(opcional)</span></label>
+        <div class="checkbox-group">
+          {% set sel_fat = sub.faturamento_mensal_esperado if sub else [] %}
+          <label class="checkbox-label">
+            <input type="checkbox" name="faturamento_mensal_esperado" value="R$ 0 a R$ 25 mil" {% if 'R$ 0 a R$ 25 mil' in sel_fat %}checked{% endif %}>
+            R$ 0 a R$ 25 mil
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="faturamento_mensal_esperado" value="R$ 25.000,01 a R$ 50 mil" {% if 'R$ 25.000,01 a R$ 50 mil' in sel_fat %}checked{% endif %}>
+            R$ 25.000,01 a R$ 50 mil
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="faturamento_mensal_esperado" value="R$ 50.000,01 a R$ 200 mil" {% if 'R$ 50.000,01 a R$ 200 mil' in sel_fat %}checked{% endif %}>
+            R$ 50.000,01 a R$ 200 mil
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="field-label" for="atividade_cnae_municipio">Atividade principal / CNAE e município <span class="optional-hint">(opcional)</span></label>
+        <input type="text" id="atividade_cnae_municipio" name="atividade_cnae_municipio" class="form-control" placeholder="Ex: Desenvolvimento de software (CNAE 6201-5/01) - São Paulo/SP" value="{{ sub.atividade_cnae_municipio if sub else '' }}">
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 02 DIAGNÓSTICO TRIBUTÁRIO | Time técnico -->
+  <section class="form-section">
+    <div class="section-header">02 DIAGNÓSTICO TRIBUTÁRIO | Time técnico</div>
+    <div class="section-body">
+
+      <div class="form-group">
+        <label class="field-label">Terá pró-labore? <span class="optional-hint">(opcional)</span></label>
+        <div class="checkbox-group">
+          {% set sel_pro = sub.tera_pro_labore if sub else [] %}
+          <label class="checkbox-label">
+            <input type="checkbox" name="tera_pro_labore" value="Sim" {% if 'Sim' in sel_pro %}checked{% endif %}>
+            Sim
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="tera_pro_labore" value="Não" {% if 'Não' in sel_pro %}checked{% endif %}>
+            Não
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="tera_pro_labore" value="A definir" {% if 'A definir' in sel_pro %}checked{% endif %}>
+            A definir
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="field-label">Simples Nacional <span class="optional-hint">(opcional)</span></label>
+        <div class="checkbox-group">
+          {% set sel_sn = sub.simples_nacional if sub else [] %}
+          <label class="checkbox-label">
+            <input type="checkbox" name="simples_nacional" value="Puro" {% if 'Puro' in sel_sn %}checked{% endif %}>
+            Puro
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="simples_nacional" value="Híbrido" {% if 'Híbrido' in sel_sn %}checked{% endif %}>
+            Híbrido
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="simples_nacional" value="Não aplicável" {% if 'Não aplicável' in sel_sn %}checked{% endif %}>
+            Não aplicável
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="simples_nacional" value="Em análise" {% if 'Em análise' in sel_sn %}checked{% endif %}>
+            Em análise
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="field-label">Tabela de apuração / Anexo <span class="optional-hint">(opcional)</span></label>
+        <div class="checkbox-group">
+          {% set sel_anx = sub.tabela_apuracao_anexo if sub else [] %}
+          <label class="checkbox-label">
+            <input type="checkbox" name="tabela_apuracao_anexo" value="III" {% if 'III' in sel_anx %}checked{% endif %}>
+            III
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="tabela_apuracao_anexo" value="IV" {% if 'IV' in sel_anx %}checked{% endif %}>
+            IV
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="tabela_apuracao_anexo" value="V" {% if 'V' in sel_anx %}checked{% endif %}>
+            V
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="tabela_apuracao_anexo" value="I" {% if 'I' in sel_anx %}checked{% endif %}>
+            I
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="tabela_apuracao_anexo" value="II" {% if 'II' in sel_anx %}checked{% endif %}>
+            II
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="tabela_apuracao_anexo" value="A confirmar" {% if 'A confirmar' in sel_anx %}checked{% endif %}>
+            A confirmar
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="field-label" for="regime_validado_por">Regime tributário e enquadramento validados por <span class="optional-hint">(opcional)</span></label>
+        <input type="text" id="regime_validado_por" name="regime_validado_por" class="form-control" placeholder="Nome do especialista responsável" value="{{ sub.regime_validado_por if sub else '' }}">
+      </div>
+
+      <div class="form-group">
+        <label class="field-label" for="pontos_atencao_tecnicos">Pontos de atenção técnicos / premissas da análise <span class="optional-hint">(opcional)</span></label>
+        <textarea id="pontos_atencao_tecnicos" name="pontos_atencao_tecnicos" class="form-control" placeholder="Detalhes técnicos, premissas de faturamento, fator R, pendências fiscais...">{{ sub.pontos_atencao_tecnicos if sub else '' }}</textarea>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 03 O QUE PRECISA SER FEITO | Comercial + Técnico -->
+  <section class="form-section">
+    <div class="section-header">03 O QUE PRECISA SER FEITO | Comercial + Técnico</div>
+    <div class="section-body">
+
+      <div class="form-group">
+        <label class="field-label">Frentes acionadas <span class="optional-hint">(opcional)</span></label>
+        <div class="checkbox-group">
+          {% set sel_frentes = sub.frentes_acionadas if sub else [] %}
+          <label class="checkbox-label">
+            <input type="checkbox" name="frentes_acionadas" value="Legalização" {% if 'Legalização' in sel_frentes %}checked{% endif %}>
+            Legalização
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="frentes_acionadas" value="Fiscal" {% if 'Fiscal' in sel_frentes %}checked{% endif %}>
+            Fiscal
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="frentes_acionadas" value="Contábil" {% if 'Contábil' in sel_frentes %}checked{% endif %}>
+            Contábil
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="frentes_acionadas" value="DP/RH" {% if 'DP/RH' in sel_frentes %}checked{% endif %}>
+            DP/RH
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="frentes_acionadas" value="Financeiro" {% if 'Financeiro' in sel_frentes %}checked{% endif %}>
+            Financeiro
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="frentes_acionadas" value="Outras" {% if 'Outras' in sel_frentes %}checked{% endif %}>
+            Outras
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="field-label" for="demandas_acordadas">Demandas acordadas, pendências e entregáveis para o onboarding <span class="optional-hint">(opcional)</span></label>
+        <textarea id="demandas_acordadas" name="demandas_acordadas" class="form-control" placeholder="Lista de entregáveis, escopo combinado e passos operacionais...">{{ sub.demandas_acordadas if sub else '' }}</textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="field-label" for="documentos_pendentes">Documentos / acessos pendentes <span class="optional-hint">(opcional, expansível - não exige upload)</span></label>
+        <textarea id="documentos_pendentes" name="documentos_pendentes" class="form-control" placeholder="Ex: Certificado digital A1, procuração RFB, extratos bancários...">{{ sub.documentos_pendentes if sub else '' }}</textarea>
+      </div>
+
+      <!-- Upload de Documentos, Imagens e Vídeos de até 10s no Supabase -->
+      <div class="form-group" style="background: var(--pj-offwhite); border: 1px dashed var(--slate-300); border-radius: var(--radius-control); padding: 18px; margin-top: 4px;">
+        <label class="field-label" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+          <span>Anexar Documentos, Imagens ou Vídeos de até 10 segundos <span class="optional-hint">(armazenamento em nuvem Supabase)</span></span>
+        </label>
+        <p style="font-size: 0.85rem; color: var(--slate-500); margin-bottom: 12px;">
+          Anexe contratos, imagens ou vídeos explicativos de até 10s. Cada documento registrará automaticamente a data e hora do seu computador.
+        </p>
+
+        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+          <input type="file" id="file-upload-input" accept="image/*,video/*,application/pdf" style="display: none;">
+          <button type="button" id="btn-trigger-upload" class="btn btn-secondary" style="width: auto; padding: 8px 18px; font-size: 0.9rem;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            Selecionar Documento / Imagem / Vídeo
+          </button>
+          <span id="upload-spinner" style="display: none; font-size: 0.85rem; color: var(--pj-blue-dark); font-weight: 500;">
+            Enviando para o Supabase...
+          </span>
+        </div>
+
+        <div id="video-duration-alert" style="display: none; color: var(--status-danger); font-size: 0.88rem; font-weight: 600; margin-top: 10px; background: var(--status-danger-bg); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--status-danger-border);"></div>
+
+        <!-- Lista de Anexos Adicionados -->
+        <div id="attachments-container" style="display: flex; flex-direction: column; gap: 10px; margin-top: 14px;">
+          {% if sub and sub.anexos_documentos %}
+            {% for anexo in sub.anexos_documentos %}
+              <div class="attachment-item" data-url="{{ anexo.url }}" data-name="{{ anexo.nome_original }}" data-tipo="{{ anexo.tipo }}" data-size="{{ anexo.tamanho_formatado }}" data-date="{{ anexo.data_pc }}" data-storage="{{ anexo.storage }}" style="background: var(--pj-white); border: 1px solid var(--slate-200); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+                <div>
+                  <strong>{{ anexo.nome_original }}</strong> ({{ anexo.tipo }})
+                  <div style="font-size: 0.8rem; color: var(--slate-500); margin-top: 2px;">
+                    Registrado em: <strong>{{ anexo.data_pc }}</strong> | Armazenamento: {{ anexo.storage }}
+                  </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                  <a href="{{ anexo.url }}" target="_blank" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem; min-height: 32px; width: auto;">Ver</a>
+                  <button type="button" class="btn btn-danger btn-remove-attachment" style="padding: 4px 10px; font-size: 0.8rem; min-height: 32px; width: auto;">Remover</button>
+                </div>
+              </div>
+            {% endfor %}
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="field-label" for="prazo_combinado">Prazo combinado com o cliente <span class="optional-hint">(opcional)</span></label>
+        <input type="text" id="prazo_combinado" name="prazo_combinado" class="form-control" placeholder="Ex: 5 dias úteis, 15/10/2026, até fechamento do mês..." value="{{ sub.prazo_combinado if sub else '' }}">
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 04 VALIDAÇÃO DO REPASSE -->
+  <section class="form-section">
+    <div class="section-header">04 VALIDAÇÃO DO REPASSE</div>
+    <div class="section-body">
+
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="field-label" for="responsavel_onboarding">Responsável pelo onboarding <span class="optional-hint">(opcional)</span></label>
+          <input type="text" id="responsavel_onboarding" name="responsavel_onboarding" class="form-control" placeholder="Nome do responsável" value="{{ sub.responsavel_onboarding if sub else '' }}">
+        </div>
+
+        <div class="form-group">
+          <label class="field-label" for="responsavel_tecnico">Responsável técnico <span class="optional-hint">(opcional)</span></label>
+          <input type="text" id="responsavel_tecnico" name="responsavel_tecnico" class="form-control" placeholder="Nome do especialista técnico" value="{{ sub.responsavel_tecnico if sub else '' }}">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="field-label">Status <span class="optional-hint">(opcional)</span></label>
+        <div class="checkbox-group">
+          {% set sel_status = sub.status_repasse if sub else [] %}
+          <label class="checkbox-label">
+            <input type="checkbox" name="status_repasse" value="Completo para entrada" {% if 'Completo para entrada' in sel_status %}checked{% endif %}>
+            Completo para entrada
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="status_repasse" value="Pendente de informações" {% if 'Pendente de informações' in sel_status %}checked{% endif %}>
+            Pendente de informações
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" name="status_repasse" value="Exige alinhamento" {% if 'Exige alinhamento' in sel_status %}checked{% endif %}>
+            Exige alinhamento
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="field-label" for="proxima_acao_resp_data">Próxima ação / responsável / data <span class="optional-hint">(opcional, expansível)</span></label>
+        <textarea id="proxima_acao_resp_data" name="proxima_acao_resp_data" class="form-control" placeholder="Descreva a próxima ação imediata, o responsável encarregado e o prazo acordado...">{{ sub.proxima_acao_resp_data if sub else '' }}</textarea>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Regra de Passagem Obrigatória -->
+  <div class="rule-banner">
+    <strong>Regra de passagem:</strong> o onboarding confirma o recebimento e devolve dúvidas ao comercial antes de iniciar a execução.
+  </div>
+
+  <!-- Ações e Barra de Envio -->
+  <div class="action-bar">
+    <div class="action-status-text" id="save-status-text">
+      {% if is_edit %}
+        Pronto para complementar ou salvar alterações
+      {% else %}
+        Preencha os campos e salve quando desejar
+      {% endif %}
+    </div>
+
+    <div class="action-buttons">
+      {% if sub and sub.view_token %}
+        <a id="btn-download-pdf" href="/pdf/{{ sub.view_token }}" class="btn btn-pdf" target="_blank">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Baixar PDF preenchido
+        </a>
+      {% else %}
+        <a id="btn-download-pdf" href="#" class="btn btn-pdf" target="_blank" style="display: none;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          Baixar PDF preenchido
+        </a>
+      {% endif %}
+
+      <button type="button" id="btn-save-draft" class="btn btn-secondary">
+        Salvar rascunho
+      </button>
+
+      <button type="button" id="btn-submit-form" class="btn btn-primary">
+        {% if is_edit %}
+          Salvar alterações
+        {% else %}
+          Enviar formulário
+        {% endif %}
+      </button>
+    </div>
+  </div>
+
+</form>
+
+<!-- Modal de Confirmação e Compartilhamento -->
+<div class="modal-overlay" id="share-modal" style="display: none;">
+  <div class="modal-content">
+    <h2 class="modal-title">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0047B9" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+      Tudo certo! Recebemos suas informações.
+    </h2>
+    <p class="modal-desc">
+      O registro foi salvo com tranquilidade e segurança. Utilize os links exclusivos abaixo para compartilhar o repasse ou complementar informações a qualquer momento.
+    </p>
+
+    <!-- Status de Envio do E-mail -->
+    <div id="modal-email-box" style="display: none; margin-bottom: 16px; padding: 12px 16px; border-radius: 10px; font-size: 0.88rem; line-height: 1.45;">
+      <div id="modal-email-text"></div>
+    </div>
+
+    <!-- Link de Consulta -->
+    <div class="token-box">
+      <div class="token-label">1. Link de Consulta (Somente Leitura)</div>
+      <div class="token-desc">Envie este link para o Onboarding / Operação visualizar os dados com segurança:</div>
+      <div class="token-input-row">
+        <input type="text" id="modal-view-url" class="token-input" readonly>
+        <button type="button" id="btn-copy-view" class="btn btn-secondary" onclick="copyToClipboard('modal-view-url', 'btn-copy-view')">Copiar</button>
+      </div>
+    </div>
+
+    <!-- Link de Edição -->
+    <div class="token-box">
+      <div class="token-label">2. Link de Edição (Complementação)</div>
+      <div class="token-desc">Guarde este link para editar, corrigir ou adicionar novas respostas neste mesmo registro:</div>
+      <div class="token-input-row">
+        <input type="text" id="modal-edit-url" class="token-input" readonly>
+        <button type="button" id="btn-copy-edit" class="btn btn-secondary" onclick="copyToClipboard('modal-edit-url', 'btn-copy-edit')">Copiar</button>
+      </div>
+    </div>
+
+    <!-- Documento de Comprovante de Anexos (Acesso Final antes de fechar o site) -->
+    <div style="background-color: var(--pj-beige); border: 1px solid var(--pj-beige-border); border-left: 4px solid var(--pj-yellow); border-radius: 12px; padding: 16px; margin: 16px 0;">
+      <div style="font-weight: 700; color: var(--pj-blue-dark); font-size: 0.95rem; margin-bottom: 4px;">
+        Documento de Comprovante & Dossiê de Anexos
+      </div>
+      <p style="font-size: 0.85rem; color: var(--pj-gray-dark); margin-bottom: 12px; line-height: 1.4;">
+        Acesse o documento consolidado contendo os registros do Handoff e a lista cronológica de todos os documentos anexados com a data do seu computador:
+      </p>
+      <a id="modal-doc-url" href="#" target="_blank" class="btn btn-primary" style="width: 100%; font-size: 0.95rem;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        Acessar Documento de Comprovante e Anexos
+      </a>
+    </div>
+
+    <!-- Ações do Modal -->
+    <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
+      <a id="modal-pdf-download" href="#" class="btn btn-pdf" target="_blank" style="flex: 1;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        Baixar PDF preenchido
+      </a>
+      <button type="button" id="modal-close-btn" class="btn btn-secondary" style="flex: 1;">
+        Continuar no formulário
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Configuração do Gmail / SMTP -->
+<div id="email-config-modal" class="modal-overlay" style="display: none; z-index: 9999;">
+  <div class="modal-content" style="max-width: 520px;">
+    <h2 class="modal-title" style="font-size: 1.25rem;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0047B9" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+      Conectar Gmail para Envio Automático
+    </h2>
+    <p class="modal-desc" style="margin-bottom: 14px;">
+      Para o sistema enviar e-mails de verdade para caixas de entrada (como Gmail), o Google exige uma <strong>Senha de Aplicativo (16 letras)</strong>:
+    </p>
+
+    <div style="background: var(--pj-offwhite); border-radius: 8px; padding: 12px 14px; font-size: 0.84rem; line-height: 1.45; margin-bottom: 16px; border: 1px solid var(--slate-200);">
+      <strong>Como gerar em 1 minuto no Google:</strong>
+      <ol style="margin: 6px 0 0 18px; padding: 0;">
+        <li>Acesse <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color: var(--pj-blue-intense); font-weight: 600; text-decoration: underline;">myaccount.google.com/apppasswords</a></li>
+        <li>Em "Nome do app", digite <strong>PJzen</strong> e clique em Criar.</li>
+        <li>Copie a senha de 16 letras gerada e cole no campo abaixo.</li>
+      </ol>
+    </div>
+
+    <div class="form-group" style="margin-bottom: 12px;">
+      <label class="field-label" for="cfg-email-user">Seu E-mail do Gmail:</label>
+      <input type="email" id="cfg-email-user" class="form-control" placeholder="seu-email@gmail.com" value="kenzo169p@gmail.com">
+    </div>
+
+    <div class="form-group" style="margin-bottom: 16px;">
+      <label class="field-label" for="cfg-email-pass">Senha de Aplicativo do Google (16 letras):</label>
+      <input type="password" id="cfg-email-pass" class="form-control" placeholder="ex: abcd efgh ijkl mnop" autocomplete="off">
+    </div>
+
+    <div id="cfg-email-error" style="display: none; background: var(--status-danger-bg); color: var(--status-danger); padding: 10px 12px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 14px; border: 1px solid var(--status-danger-border);"></div>
+
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <button type="button" id="btn-save-email-cfg" class="btn btn-primary" style="flex: 1.5;">
+        Conectar e Disparar E-mail
+      </button>
+      <button type="button" id="btn-close-email-cfg" class="btn btn-secondary" style="flex: 1;">
+        Fechar
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/form.js') }}"></script>
+{% endblock %}

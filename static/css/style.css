@@ -1,0 +1,966 @@
+/* ==========================================================================
+   PJzen Design System
+   "Sua vida PJ mais zen"
+   ========================================================================== */
+
+:root {
+  /* Paleta Oficial PJzen */
+  --pj-yellow: #FFD100;
+  --pj-yellow-hover: #E5BC00;
+  --pj-yellow-subtle: #FEFCE8;
+  --pj-yellow-border: #FDE047;
+  
+  --pj-graphite: #1C1B1F;
+  --pj-white: #FFFFFF;
+  
+  --pj-blue-intense: #0047B9;
+  --pj-blue-intense-hover: #003AA0;
+  --pj-blue-dark: #003383;
+  --pj-blue-light: #99C2FF;
+  --pj-blue-subtle: #EFF6FF;
+  
+  --pj-gray-dark: #2C222D;
+  --pj-offwhite: #F5F3F1;
+  --pj-beige: #F2EFE9;
+  --pj-beige-border: #E5E0D8;
+  
+  /* Cores Funcionais de Status (Acessibilidade & Semântica) */
+  --status-success: #10B981;
+  --status-success-bg: #ECFDF5;
+  --status-success-border: #A7F3D0;
+  --status-success-text: #065F46;
+
+  --status-warning: #F59E0B;
+  --status-warning-bg: #FFFBEB;
+  --status-warning-border: #FDE68A;
+  --status-warning-text: #92400E;
+
+  --status-danger: #DC2626;
+  --status-danger-bg: #FEF2F2;
+  --status-danger-border: #FECACA;
+  --status-danger-text: #991B1B;
+
+  --slate-100: #F1F5F9;
+  --slate-200: #E2E8F0;
+  --slate-300: #CBD5E1;
+  --slate-400: #94A3B8;
+  --slate-500: #64748B;
+
+  /* Formas e Dimensões */
+  --radius-card: 16px;
+  --radius-control: 12px;
+  --radius-badge: 8px;
+
+  /* Sombras Suaves */
+  --shadow-sm: 0 1px 3px rgba(28, 27, 31, 0.05);
+  --shadow-card: 0 4px 12px rgba(28, 27, 31, 0.04), 0 1px 2px rgba(28, 27, 31, 0.02);
+  --shadow-modal: 0 20px 25px -5px rgba(28, 27, 31, 0.15), 0 8px 10px -6px rgba(28, 27, 31, 0.1);
+}
+
+/* Reset Básico */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  background-color: var(--pj-offwhite);
+  color: var(--pj-gray-dark);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: 80px;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+img, table, input, select, textarea {
+  max-width: 100%;
+}
+
+.container {
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding: 32px 20px;
+  }
+}
+
+/* Header Card PJzen */
+.header-card {
+  background: var(--pj-white);
+  border-radius: var(--radius-card);
+  padding: 24px;
+  border: 1px solid var(--slate-200);
+  box-shadow: var(--shadow-card);
+  margin-bottom: 24px;
+  border-left: 6px solid var(--pj-yellow);
+}
+
+.header-top-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.brand-logo {
+  width: 62px;
+  height: 62px;
+  object-fit: contain;
+  flex-shrink: 0;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(28, 27, 31, 0.08);
+}
+
+.brand-info {
+  flex: 1;
+}
+
+.brand-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--pj-blue-dark);
+  letter-spacing: -0.01em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.brand-subtitle {
+  font-size: 0.95rem;
+  color: var(--slate-500);
+  font-weight: 400;
+  margin-top: 4px;
+}
+
+.brand-tagline {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--pj-blue-intense);
+  background: var(--pj-blue-subtle);
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+/* Card Informativo de Nome (Bege Claro #F2EFE9) */
+.name-highlight-card {
+  background: var(--pj-beige);
+  border-radius: var(--radius-card);
+  padding: 22px;
+  border: 1px solid var(--pj-beige-border);
+  border-left: 5px solid var(--pj-yellow);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 24px;
+}
+
+.name-highlight-card.error-state {
+  border-color: var(--status-danger);
+  background-color: var(--status-danger-bg);
+}
+
+.help-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 0.88rem;
+  color: var(--pj-gray-dark);
+  background-color: var(--pj-white);
+  padding: 12px 14px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--pj-beige-border);
+}
+
+.help-notice svg {
+  color: var(--pj-blue-dark);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Seções do Formulário (Cards com fundo branco #FFFFFF) */
+.form-section {
+  background: var(--pj-white);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--slate-200);
+  box-shadow: var(--shadow-card);
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.section-header {
+  background-color: var(--pj-white);
+  color: var(--pj-blue-dark);
+  padding: 18px 24px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  border-bottom: 1px solid var(--slate-200);
+  border-left: 5px solid var(--pj-yellow);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.section-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Grid Responsivo para 2 Colunas */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+@media (min-width: 640px) {
+  .form-grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Campos de Formulário */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.field-label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--pj-graphite);
+}
+
+.required-badge {
+  color: var(--status-danger);
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+.optional-hint {
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: var(--slate-400);
+}
+
+.form-control {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 1rem;
+  color: var(--pj-gray-dark);
+  background-color: var(--pj-white);
+  border: 1px solid var(--slate-300);
+  border-radius: var(--radius-control);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  font-family: inherit;
+  font-weight: 400;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--pj-blue-intense);
+  box-shadow: 0 0 0 3px rgba(0, 71, 185, 0.15);
+}
+
+.form-control::placeholder {
+  color: var(--slate-400);
+}
+
+textarea.form-control {
+  min-height: 88px;
+  resize: vertical;
+  line-height: 1.5;
+  overflow-y: hidden;
+}
+
+/* Caixas de Seleção (Checkboxes Independentes) */
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background-color: var(--pj-white);
+  border: 1px solid var(--slate-300);
+  padding: 10px 16px;
+  border-radius: var(--radius-control);
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--pj-gray-dark);
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+  min-height: 44px; /* Acessibilidade de toque no celular */
+}
+
+.checkbox-label:hover {
+  background-color: var(--pj-offwhite);
+  border-color: var(--slate-400);
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--pj-blue-dark);
+  cursor: pointer;
+}
+
+.checkbox-label.is-checked {
+  background-color: var(--pj-yellow-subtle);
+  border-color: var(--pj-yellow);
+  color: var(--pj-graphite);
+  font-weight: 600;
+}
+
+/* Banner da Regra de Passagem (Card Informativo em Bege Claro #F2EFE9) */
+.rule-banner {
+  background-color: var(--pj-beige);
+  border: 1px solid var(--pj-beige-border);
+  border-left: 5px solid var(--pj-blue-dark);
+  border-radius: var(--radius-card);
+  padding: 18px 24px;
+  margin-bottom: 28px;
+  color: var(--pj-gray-dark);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.rule-banner strong {
+  font-weight: 700;
+  color: var(--pj-blue-dark);
+}
+
+/* Barra de Ações Inferior */
+.action-bar {
+  background: var(--pj-white);
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-card);
+  padding: 20px 24px;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+}
+
+@media (min-width: 640px) {
+  .action-bar {
+    flex-direction: row;
+  }
+}
+
+.action-status-text {
+  font-size: 0.92rem;
+  color: var(--slate-500);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  flex-direction: column;
+}
+
+@media (min-width: 520px) {
+  .action-buttons {
+    width: auto;
+    flex-direction: row;
+  }
+}
+
+/* Botões do Design System PJzen */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+  text-decoration: none;
+  font-family: inherit;
+  width: 100%;
+  min-height: 46px;
+}
+
+@media (min-width: 520px) {
+  .btn {
+    width: auto;
+  }
+}
+
+/* Botão Principal: Fundo amarelo #FFD100, Texto grafite #1C1B1F */
+.btn-primary {
+  background-color: var(--pj-yellow);
+  color: var(--pj-graphite);
+  font-weight: 600;
+  border-color: var(--pj-yellow);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--pj-yellow-hover);
+  border-color: var(--pj-yellow-hover);
+  color: var(--pj-graphite);
+}
+
+.btn-primary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 209, 0, 0.45);
+}
+
+/* Botão Secundário: Fundo branco, Texto e borda azul escuro #003383 */
+.btn-secondary {
+  background-color: var(--pj-white);
+  color: var(--pj-blue-dark);
+  border-color: var(--pj-blue-dark);
+  font-weight: 600;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--pj-offwhite);
+  color: var(--pj-blue-dark);
+}
+
+.btn-secondary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 51, 131, 0.2);
+}
+
+/* Botão PDF / Ação Especial: Azul Intenso #0047B9 */
+.btn-pdf {
+  background-color: var(--pj-blue-intense);
+  color: var(--pj-white);
+  font-weight: 600;
+  border-color: var(--pj-blue-intense);
+}
+
+.btn-pdf:hover:not(:disabled) {
+  background-color: var(--pj-blue-intense-hover);
+  border-color: var(--pj-blue-intense-hover);
+  color: var(--pj-white);
+}
+
+.btn-pdf:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 71, 185, 0.3);
+}
+
+/* Botão Destrutivo / Ação de Erro (Sem amarelo) */
+.btn-danger {
+  background-color: var(--status-danger-bg);
+  color: var(--status-danger);
+  border-color: var(--status-danger-border);
+  font-weight: 600;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: var(--status-danger);
+  color: var(--pj-white);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Modais & Compartilhamento */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(28, 27, 31, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: var(--pj-white);
+  border-radius: var(--radius-card);
+  max-width: 580px;
+  width: 100%;
+  padding: 32px;
+  box-shadow: var(--shadow-modal);
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid var(--slate-200);
+}
+
+.modal-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--pj-blue-dark);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-desc {
+  font-size: 0.95rem;
+  color: var(--slate-500);
+  margin-bottom: 22px;
+  line-height: 1.5;
+}
+
+.token-box {
+  background-color: var(--pj-offwhite);
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-control);
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.token-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--pj-blue-dark);
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+
+.token-desc {
+  font-size: 0.85rem;
+  color: var(--pj-gray-dark);
+  margin-bottom: 10px;
+}
+
+.token-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.token-input {
+  flex: 1;
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  background: var(--pj-white);
+  border: 1px solid var(--slate-300);
+  border-radius: var(--radius-control);
+  color: var(--pj-gray-dark);
+  font-family: inherit;
+}
+
+/* Toast Notifications */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 14px 22px;
+  background-color: var(--pj-graphite);
+  color: var(--pj-white);
+  font-size: 0.92rem;
+  font-weight: 500;
+  border-radius: var(--radius-control);
+  box-shadow: var(--shadow-modal);
+  z-index: 1001;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: all 0.25s ease;
+  pointer-events: none;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast.toast-error {
+  background-color: var(--status-danger);
+  color: var(--pj-white);
+}
+
+.toast.toast-success {
+  background-color: var(--pj-blue-dark);
+  color: var(--pj-white);
+  border-left: 4px solid var(--pj-yellow);
+}
+
+/* Visualização Somente Leitura (View Mode) */
+.view-field-row {
+  border-bottom: 1px solid var(--slate-100);
+  padding: 12px 0;
+}
+
+.view-field-row:last-child {
+  border-bottom: none;
+}
+
+.view-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--pj-blue-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 3px;
+}
+
+.view-val {
+  font-size: 1rem;
+  color: var(--pj-gray-dark);
+  white-space: pre-wrap;
+  line-height: 1.5;
+}
+
+.view-val.empty {
+  color: var(--slate-400);
+  font-style: italic;
+}
+
+.view-tag {
+  display: inline-block;
+  background-color: var(--pj-yellow-subtle);
+  border: 1px solid var(--pj-yellow-border);
+  color: var(--pj-graphite);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: var(--radius-badge);
+  margin-right: 6px;
+  margin-bottom: 4px;
+}
+
+.view-tag-off {
+  display: inline-block;
+  background-color: var(--pj-offwhite);
+  color: var(--slate-400);
+  font-size: 0.85rem;
+  padding: 4px 12px;
+  border-radius: var(--radius-badge);
+  margin-right: 6px;
+  margin-bottom: 4px;
+  text-decoration: line-through;
+}
+
+/* Status Badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.status-badge.enviado {
+  background-color: var(--status-success-bg);
+  color: var(--status-success-text);
+  border: 1px solid var(--status-success-border);
+}
+
+.status-badge.rascunho {
+  background-color: var(--status-warning-bg);
+  color: var(--status-warning-text);
+  border: 1px solid var(--status-warning-border);
+}
+
+/* ==========================================================================
+   Otimizações e Adaptações Específicas para Celulares / Mobile (Smartphones)
+   ========================================================================== */
+
+/* Prevenção de zoom indesejado no iOS Safari e melhoria de toque */
+button, .btn, .checkbox-label, input, select, textarea {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+@media (max-width: 640px) {
+  body {
+    padding-bottom: 90px;
+    font-size: 15px;
+  }
+
+  .container {
+    padding: 10px 12px;
+  }
+
+  /* Cabeçalho compacto em telas pequenas */
+  .header-card {
+    padding: 16px 14px;
+    margin-bottom: 14px;
+    border-left-width: 4px;
+  }
+
+  .header-top-row {
+    gap: 12px;
+    align-items: center;
+  }
+
+  .brand-logo {
+    width: 46px;
+    height: 46px;
+  }
+
+  .brand-title {
+    font-size: 1.05rem;
+    line-height: 1.25;
+  }
+
+  .brand-subtitle {
+    font-size: 0.78rem;
+    line-height: 1.35;
+    margin-top: 3px;
+  }
+
+  .brand-tagline {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    margin-top: 4px;
+  }
+
+  /* Cartão do nome e avisos */
+  .name-highlight-card {
+    padding: 14px 12px;
+    border-radius: 12px;
+    margin-bottom: 14px;
+    border-left-width: 4px;
+  }
+
+  .name-card-title {
+    font-size: 0.95rem;
+  }
+
+  .help-notice {
+    padding: 10px 12px;
+    font-size: 0.8rem;
+    gap: 8px;
+  }
+
+  .rule-banner {
+    padding: 12px 14px;
+    font-size: 0.86rem;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    border-left-width: 4px;
+  }
+
+  /* Seções do formulário */
+  .form-section {
+    border-radius: 12px;
+    margin-bottom: 14px;
+  }
+
+  .section-header {
+    padding: 12px 14px;
+    font-size: 0.92rem;
+    border-left-width: 4px;
+  }
+
+  .section-body {
+    padding: 14px 12px;
+    gap: 14px;
+  }
+
+  /* Inputs confortáveis e sem zoom no iPhone (font-size 16px) */
+  .form-control {
+    min-height: 48px;
+    font-size: 16px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+  }
+
+  textarea.form-control {
+    min-height: 84px;
+    font-size: 16px;
+    padding: 10px 12px;
+  }
+
+  .field-label {
+    font-size: 0.88rem;
+  }
+
+  /* Caixas de seleção full width no celular para toque fácil */
+  .checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .checkbox-label {
+    width: 100%;
+    min-height: 48px;
+    padding: 10px 14px;
+    font-size: 0.92rem;
+    justify-content: flex-start;
+    border-radius: 10px;
+  }
+
+  .checkbox-label input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    margin-right: 6px;
+    flex-shrink: 0;
+  }
+
+  /* Componente de upload no celular */
+  #btn-trigger-upload {
+    width: 100% !important;
+    min-height: 48px;
+    justify-content: center;
+  }
+
+  .attachment-item {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 12px 12px !important;
+  }
+
+  .attachment-item > div:last-child {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+
+  .attachment-item > div:last-child .btn {
+    flex: 1;
+    min-height: 40px;
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    justify-content: center;
+  }
+
+  /* Barra de Ações no celular */
+  .action-bar {
+    padding: 14px 14px;
+    border-radius: 14px;
+    gap: 12px;
+  }
+
+  .action-status-text {
+    font-size: 0.82rem;
+    text-align: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .btn {
+    width: 100%;
+    min-height: 50px;
+    font-size: 0.98rem;
+    padding: 12px 16px;
+    justify-content: center;
+  }
+
+  /* Modais em estilo Bottom-Sheet no celular */
+  .modal-overlay {
+    padding: 8px;
+    align-items: flex-end;
+  }
+
+  .modal-content {
+    padding: 20px 14px;
+    border-radius: 20px 20px 12px 12px;
+    max-height: 94vh;
+    width: 100%;
+  }
+
+  .modal-title {
+    font-size: 1.15rem;
+  }
+
+  .modal-desc {
+    font-size: 0.85rem;
+    margin-bottom: 14px;
+  }
+
+  .token-box {
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+
+  .token-input-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .token-input-row .token-input {
+    width: 100%;
+    min-height: 44px;
+    font-size: 0.88rem;
+  }
+
+  .token-input-row .btn {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  /* Toast centralizado no rodapé do celular */
+  .toast {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: calc(100% - 24px);
+    padding: 12px 16px;
+    font-size: 0.88rem;
+    text-align: center;
+    border-radius: 10px;
+  }
+
+  /* Visualização no celular */
+  .view-field-row {
+    padding: 10px 0;
+  }
+
+  .view-label {
+    font-size: 0.78rem;
+  }
+
+  .view-val {
+    font-size: 0.92rem;
+  }
+
+  .view-tag, .view-tag-off {
+    font-size: 0.8rem;
+    padding: 4px 8px;
+    margin-right: 4px;
+    margin-bottom: 4px;
+  }
+}
+

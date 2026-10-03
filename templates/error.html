@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}PJzen | Registro não encontrado{% endblock %}
+
+{% block content %}
+<header class="header-card" style="border-left-color: var(--danger);">
+  <div class="header-top-row">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo PJzen" class="brand-logo">
+    <div class="brand-info">
+      <div class="brand-title">
+        <span>PJzen | HANDOFF COMERCIAL → ONBOARDING & OPERAÇÃO</span>
+      </div>
+      <p class="brand-subtitle">Diagnóstico de entrada • preencher antes de transferir o cliente</p>
+    </div>
+  </div>
+</header>
+
+<div class="name-highlight-card" style="border-color: var(--danger-border); text-align: center; padding: 40px 20px;">
+  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" style="margin-bottom: 16px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+  <h2 style="font-size: 1.3rem; margin-bottom: 8px; color: var(--slate-900);">{{ title or 'Registro não encontrado' }}</h2>
+  <p style="color: var(--slate-600); max-width: 480px; margin: 0 auto 24px auto;">
+    {{ message or 'O link acessado é inválido ou o registro não está disponível.' }}
+  </p>
+  <div>
+    <a href="/" class="btn btn-primary" style="display: inline-flex;">Iniciar Novo Formulário</a>
+  </div>
+</div>
+{% endblock %}

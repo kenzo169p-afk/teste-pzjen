@@ -1,0 +1,21 @@
+# Segredos e variáveis de ambiente locais
+.env
+.env.local
+
+# Banco de dados SQLite local
+*.db
+*.sqlite3
+
+# Arquivos carregados localmente em uploads
+uploads/*
+!uploads/.gitkeep
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Sistema operacional
+Thumbs.db
+.DS_Store

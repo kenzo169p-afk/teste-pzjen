@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}PJzen | Documento de Comprovante & Anexos: {{ sub.cliente_razao_social or sub.nome_preenchedor or 'Registro' }}{% endblock %}
+
+{% block content %}
+<header class="header-card">
+  <div class="header-top-row">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo PJzen" class="brand-logo">
+    <div class="brand-info">
+      <div class="brand-title">
+        <span>PJzen | COMPROVANTE DE ANEXOS & DOSSIÊ DE ENTRADA</span>
+      </div>
+      <p class="brand-subtitle">Registro cronológico de documentos, imagens e mídias vinculadas ao Handoff</p>
+      <span class="brand-tagline">Sua vida PJ mais zen</span>
+    </div>
+  </div>
+</header>
+
+<!-- Meta Box -->
+<div class="name-highlight-card" style="border-left: 5px solid var(--pj-blue-dark);">
+  <div class="form-grid-2">
+    <div>
+      <div class="view-label">Preenchido por</div>
+      <div class="view-val" style="font-weight: 700;">
+        {{ sub.nome_preenchedor or 'Não informado' }}
+      </div>
+      {% if sub.email_preenchedor %}
+        <div style="font-size: 0.85rem; color: var(--slate-500); margin-top: 2px;">
+          E-mail: {{ sub.email_preenchedor }}
+        </div>
+      {% endif %}
+      {% if sub.telefone_preenchedor %}
+        <div style="font-size: 0.85rem; color: var(--slate-500);">
+          Telefone: {{ sub.telefone_preenchedor }}
+        </div>
+      {% endif %}
+    </div>
+
+    <div>
+      <div class="view-label">Cliente / Razão social</div>
+      <div class="view-val" style="font-weight: 700;">
+        {{ sub.cliente_razao_social or 'Não informado' }}
+      </div>
+      {% if sub.cnpj %}
+        <div style="font-size: 0.85rem; color: var(--slate-500); margin-top: 2px;">
+          CNPJ: {{ sub.cnpj }}
+        </div>
+      {% endif %}
+      {% if sub.email_cliente %}
+        <div style="font-size: 0.85rem; color: var(--slate-500);">
+          E-mail: {{ sub.email_cliente }}
+        </div>
+      {% endif %}
+      {% if sub.telefone_cliente %}
+        <div style="font-size: 0.85rem; color: var(--slate-500);">
+          Telefone: {{ sub.telefone_cliente }}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Seção Lista de Documentos e Mídias -->
+<section class="form-section">
+  <div class="section-header">
+    <span>Documentos e Mídias Registrados</span>
+    <span style="font-size: 0.85rem; font-weight: 500; color: var(--pj-blue-dark); background: var(--pj-beige); padding: 4px 10px; border-radius: 6px;">
+      Total: {{ sub.anexos_documentos|length }} item(ns)
+    </span>
+  </div>
+  <div class="section-body">
+
+    {% if sub.anexos_documentos and sub.anexos_documentos|length > 0 %}
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        {% for anexo in sub.anexos_documentos %}
+          <div style="background: var(--pj-white); border: 1px solid var(--slate-200); border-radius: var(--radius-control); padding: 18px; display: flex; flex-direction: column; gap: 14px; box-shadow: var(--shadow-sm);">
+            
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+              <div>
+                <h3 style="font-size: 1rem; font-weight: 700; color: var(--pj-blue-dark); margin-bottom: 4px;">
+                  {{ anexo.nome_original or 'Arquivo sem nome' }}
+                </h3>
+                <div style="display: flex; gap: 12px; font-size: 0.85rem; color: var(--slate-500); flex-wrap: wrap;">
+                  <span>Tipo: <strong>{{ anexo.tipo or 'Arquivo' }}</strong></span>
+                  {% if anexo.tamanho_formatado %}
+                    <span>Tamanho: {{ anexo.tamanho_formatado }}</span>
+                  {% endif %}
+                  <span>Armazenamento: <strong style="color: var(--pj-blue-intense);">{{ anexo.storage or 'Supabase' }}</strong></span>
+                </div>
+              </div>
+
+              <!-- Carimbo com Data do PC -->
+              <div style="background-color: var(--pj-beige); border: 1px solid var(--pj-beige-border); border-left: 3px solid var(--pj-yellow); padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; color: var(--pj-graphite);">
+                <strong>Data de registro no PC:</strong><br>
+                <span>{{ anexo.data_pc or anexo.created_at_pc or 'Registrado no envio' }}</span>
+              </div>
+            </div>
+
+            <!-- Pré-visualização Mídia -->
+            {% if anexo.tipo and 'imagem' in anexo.tipo.lower() %}
+              <div style="max-width: 400px; border-radius: 8px; overflow: hidden; border: 1px solid var(--slate-200);">
+                <img src="{{ anexo.url }}" alt="{{ anexo.nome_original }}" style="width: 100%; height: auto; display: block;">
+              </div>
+            {% elif anexo.tipo and 'video' in anexo.tipo.lower() %}
+              <div style="max-width: 440px; border-radius: 8px; overflow: hidden; border: 1px solid var(--slate-200);">
+                <video controls style="width: 100%; max-height: 260px; background: #000; display: block;">
+                  <source src="{{ anexo.url }}" type="{{ anexo.mime or 'video/mp4' }}">
+                  Seu navegador não suporta a reprodução deste vídeo.
+                </video>
+              </div>
+            {% endif %}
+
+            <div style="display: flex; gap: 10px; align-items: center; margin-top: 4px;">
+              <a href="{{ anexo.url }}" target="_blank" class="btn btn-secondary" style="padding: 6px 16px; font-size: 0.85rem; min-height: 38px; width: auto;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                Abrir em Nova Aba
+              </a>
+            </div>
+
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 32px 16px; color: var(--slate-500);">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 8px; color: var(--slate-400);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        <p style="font-size: 0.95rem;">Nenhum documento ou vídeo foi anexado a este registro.</p>
+      </div>
+    {% endif %}
+
+  </div>
+</section>
+
+<!-- Regra de Passagem Obrigatória -->
+<div class="rule-banner">
+  <strong>Regra de passagem:</strong> o onboarding confirma o recebimento e devolve dúvidas ao comercial antes de iniciar a execução.
+</div>
+
+<!-- Ações do Comprovante -->
+<div class="action-bar">
+  <div class="action-status-text">
+    Documento oficial de anexos gerado com sucesso
+  </div>
+
+  <div class="action-buttons">
+    <a href="/view/{{ sub.view_token }}" class="btn btn-secondary">
+      Ver Handoff Completo
+    </a>
+    <button type="button" class="btn btn-primary" onclick="window.print()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+      Imprimir Comprovante
+    </button>
+  </div>
+</div>
+{% endblock %}

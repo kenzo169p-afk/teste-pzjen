@@ -1,0 +1,367 @@
+{% extends "base.html" %}
+
+{% block title %}PJzen | Consulta de Handoff: {{ sub.cliente_razao_social or sub.nome_preenchedor or 'Registro' }}{% endblock %}
+
+{% block content %}
+<header class="header-card">
+  <div class="header-top-row">
+    <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo PJzen" class="brand-logo">
+    <div class="brand-info">
+      <div class="brand-title">
+        <span>PJzen | HANDOFF COMERCIAL → ONBOARDING & OPERAÇÃO</span>
+        {% if sub.status_tecnico == 'enviado' %}
+          <span class="status-badge enviado">Enviado (v{{ sub.version }})</span>
+        {% else %}
+          <span class="status-badge rascunho">Rascunho (v{{ sub.version }})</span>
+        {% endif %}
+      </div>
+      <p class="brand-subtitle">Diagnóstico de entrada • preencher antes de transferir o cliente</p>
+      <span class="brand-tagline">Sua vida PJ mais zen</span>
+    </div>
+  </div>
+</header>
+
+<!-- Meta Box -->
+<div class="name-highlight-card" style="border-left: 5px solid var(--pj-blue-dark);">
+  <div class="form-grid-2">
+    <div>
+      <div class="view-label">Preenchido por</div>
+      <div class="view-val" style="font-weight: 700; font-size: 1.05rem;">
+        {{ sub.nome_preenchedor or 'Não informado (Rascunho)' }}
+      </div>
+      {% if sub.email_preenchedor %}
+        <div style="font-size: 0.85rem; color: var(--slate-500); margin-top: 2px;">
+          E-mail: {{ sub.email_preenchedor }}
+        </div>
+      {% endif %}
+      {% if sub.telefone_preenchedor %}
+        <div style="font-size: 0.85rem; color: var(--slate-500);">
+          Telefone: {{ sub.telefone_preenchedor }}
+        </div>
+      {% endif %}
+    </div>
+    <div>
+      <div class="view-label">Data do registro / envio</div>
+      <div class="view-val">
+        {% if sub.submitted_at %}
+          {{ sub.submitted_at[:16].replace('T', ' às ') }}
+        {% elif sub.updated_at %}
+          {{ sub.updated_at[:16].replace('T', ' às ') }} (Rascunho)
+        {% else %}
+          —
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 01 IDENTIFICAÇÃO E CONTRATAÇÃO | Comercial -->
+<section class="form-section">
+  <div class="section-header">01 IDENTIFICAÇÃO E CONTRATAÇÃO | Comercial</div>
+  <div class="section-body">
+    
+    <div class="form-grid-2">
+      <div class="view-field-row">
+        <div class="view-label">Cliente / Razão social</div>
+        <div class="view-val {% if not sub.cliente_razao_social %}empty{% endif %}">
+          {{ sub.cliente_razao_social or 'Não informado' }}
+        </div>
+      </div>
+
+      <div class="view-field-row">
+        <div class="view-label">CNPJ (se houver)</div>
+        <div class="view-val {% if not sub.cnpj %}empty{% endif %}">
+          {{ sub.cnpj or 'Não informado' }}
+        </div>
+      </div>
+    </div>
+
+    <div class="form-grid-2">
+      <div class="view-field-row">
+        <div class="view-label">E-mail do novo cliente</div>
+        <div class="view-val {% if not sub.email_cliente %}empty{% endif %}">
+          {{ sub.email_cliente or 'Não informado' }}
+        </div>
+      </div>
+
+      <div class="view-field-row">
+        <div class="view-label">Telefone do novo cliente</div>
+        <div class="view-val {% if not sub.telefone_cliente %}empty{% endif %}">
+          {{ sub.telefone_cliente or 'Não informado' }}
+        </div>
+      </div>
+    </div>
+
+    <div class="form-grid-2">
+      <div class="view-field-row">
+        <div class="view-label">Responsável comercial</div>
+        <div class="view-val {% if not sub.responsavel_comercial %}empty{% endif %}">
+          {{ sub.responsavel_comercial or 'Não informado' }}
+        </div>
+      </div>
+
+      <div class="view-field-row">
+        <div class="view-label">Data do repasse</div>
+        <div class="view-val {% if not sub.data_repasse %}empty{% endif %}">
+          {{ sub.data_repasse or 'Não informado' }}
+        </div>
+      </div>
+    </div>
+
+    <div class="view-field-row">
+      <div class="view-label">Tipo de demanda</div>
+      <div class="view-val">
+        {% set opts = ['Abertura', 'Troca de contador', 'Regularização / outro'] %}
+        {% for opt in opts %}
+          {% if opt in sub.tipo_demanda %}
+            <span class="view-tag"><b>[X]</b> {{ opt }}</span>
+          {% else %}
+            <span class="view-tag-off">[ ] {{ opt }}</span>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="view-field-row">
+      <div class="view-label">Plano contratado</div>
+      <div class="view-val">
+        {% set opts = ['PJzen Plus', 'PJzen Pro', 'PJzen One'] %}
+        {% for opt in opts %}
+          {% if opt in sub.plano_contratado %}
+            <span class="view-tag"><b>[X]</b> {{ opt }}</span>
+          {% else %}
+            <span class="view-tag-off">[ ] {{ opt }}</span>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="view-field-row">
+      <div class="view-label">Faturamento mensal esperado</div>
+      <div class="view-val">
+        {% set opts = ['R$ 0 a R$ 25 mil', 'R$ 25.000,01 a R$ 50 mil', 'R$ 50.000,01 a R$ 200 mil'] %}
+        {% for opt in opts %}
+          {% if opt in sub.faturamento_mensal_esperado %}
+            <span class="view-tag"><b>[X]</b> {{ opt }}</span>
+          {% else %}
+            <span class="view-tag-off">[ ] {{ opt }}</span>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="view-field-row">
+      <div class="view-label">Atividade principal / CNAE e município</div>
+      <div class="view-val {% if not sub.atividade_cnae_municipio %}empty{% endif %}">
+        {{ sub.atividade_cnae_municipio or 'Não informado' }}
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- 02 DIAGNÓSTICO TRIBUTÁRIO | Time técnico -->
+<section class="form-section">
+  <div class="section-header">02 DIAGNÓSTICO TRIBUTÁRIO | Time técnico</div>
+  <div class="section-body">
+
+    <div class="view-field-row">
+      <div class="view-label">Terá pró-labore?</div>
+      <div class="view-val">
+        {% set opts = ['Sim', 'Não', 'A definir'] %}
+        {% for opt in opts %}
+          {% if opt in sub.tera_pro_labore %}
+            <span class="view-tag"><b>[X]</b> {{ opt }}</span>
+          {% else %}
+            <span class="view-tag-off">[ ] {{ opt }}</span>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="view-field-row">
+      <div class="view-label">Simples Nacional</div>
+      <div class="view-val">
+        {% set opts = ['Puro', 'Híbrido', 'Não aplicável', 'Em análise'] %}
+        {% for opt in opts %}
+          {% if opt in sub.simples_nacional %}
+            <span class="view-tag"><b>[X]</b> {{ opt }}</span>
+          {% else %}
+            <span class="view-tag-off">[ ] {{ opt }}</span>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="view-field-row">
+      <div class="view-label">Tabela de apuração / Anexo</div>
+      <div class="view-val">
+        {% set opts = ['III', 'IV', 'V', 'I', 'II', 'A confirmar'] %}
+        {% for opt in opts %}
+          {% if opt in sub.tabela_apuracao_anexo %}
+            <span class="view-tag"><b>[X]</b> {{ opt }}</span>
+          {% else %}
+            <span class="view-tag-off">[ ] {{ opt }}</span>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="view-field-row">
+      <div class="view-label">Regime tributário e enquadramento validados por</div>
+      <div class="view-val {% if not sub.regime_validado_por %}empty{% endif %}">
+        {{ sub.regime_validado_por or 'Não informado' }}
+      </div>
+    </div>
+
+    <div class="view-field-row">
+      <div class="view-label">Pontos de atenção técnicos / premissas da análise</div>
+      <div class="view-val {% if not sub.pontos_atencao_tecnicos %}empty{% endif %}">
+        {{ sub.pontos_atencao_tecnicos or 'Nenhum ponto registrado' }}
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- 03 O QUE PRECISA SER FEITO | Comercial + Técnico -->
+<section class="form-section">
+  <div class="section-header">03 O QUE PRECISA SER FEITO | Comercial + Técnico</div>
+  <div class="section-body">
+
+    <div class="view-field-row">
+      <div class="view-label">Frentes acionadas</div>
+      <div class="view-val">
+        {% set opts = ['Legalização', 'Fiscal', 'Contábil', 'DP/RH', 'Financeiro', 'Outras'] %}
+        {% for opt in opts %}
+          {% if opt in sub.frentes_acionadas %}
+            <span class="view-tag"><b>[X]</b> {{ opt }}</span>
+          {% else %}
+            <span class="view-tag-off">[ ] {{ opt }}</span>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="view-field-row">
+      <div class="view-label">Demandas acordadas, pendências e entregáveis para o onboarding</div>
+      <div class="view-val {% if not sub.demandas_acordadas %}empty{% endif %}">
+        {{ sub.demandas_acordadas or 'Nenhuma demanda registrada' }}
+      </div>
+    </div>
+
+    <div class="view-field-row">
+      <div class="view-label">Documentos / acessos pendentes</div>
+      <div class="view-val {% if not sub.documentos_pendentes %}empty{% endif %}">
+        {{ sub.documentos_pendentes or 'Nenhum documento pendente' }}
+      </div>
+    </div>
+
+    <!-- Anexos de Mídias e Documentos com Data do PC -->
+    <div class="view-field-row">
+      <div class="view-label">Documentos e Mídias Anexados (Supabase)</div>
+      <div class="view-val">
+        {% if sub.anexos_documentos and sub.anexos_documentos|length > 0 %}
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 8px;">
+            {% for anexo in sub.anexos_documentos %}
+              <div style="background: var(--pj-offwhite); border: 1px solid var(--slate-200); border-radius: 8px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+                <div>
+                  <strong>{{ anexo.nome_original }}</strong> ({{ anexo.tipo }})
+                  <div style="font-size: 0.82rem; color: var(--slate-500); margin-top: 2px;">
+                    Registrado em: <strong>{{ anexo.data_pc }}</strong> | Armazenado no: {{ anexo.storage }}
+                  </div>
+                </div>
+                <a href="{{ anexo.url }}" target="_blank" class="btn btn-secondary" style="padding: 6px 14px; font-size: 0.85rem; min-height: 36px; width: auto;">
+                  Visualizar / Baixar
+                </a>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <span class="empty">Nenhum arquivo ou vídeo anexado</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="view-field-row">
+      <div class="view-label">Prazo combinado com o cliente</div>
+      <div class="view-val {% if not sub.prazo_combinado %}empty{% endif %}">
+        {{ sub.prazo_combinado or 'Não informado' }}
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- 04 VALIDAÇÃO DO REPASSE -->
+<section class="form-section">
+  <div class="section-header">04 VALIDAÇÃO DO REPASSE</div>
+  <div class="section-body">
+
+    <div class="form-grid-2">
+      <div class="view-field-row">
+        <div class="view-label">Responsável pelo onboarding</div>
+        <div class="view-val {% if not sub.responsavel_onboarding %}empty{% endif %}">
+          {{ sub.responsavel_onboarding or 'Não informado' }}
+        </div>
+      </div>
+
+      <div class="view-field-row">
+        <div class="view-label">Responsável técnico</div>
+        <div class="view-val {% if not sub.responsavel_tecnico %}empty{% endif %}">
+          {{ sub.responsavel_tecnico or 'Não informado' }}
+        </div>
+      </div>
+    </div>
+
+    <div class="view-field-row">
+      <div class="view-label">Status</div>
+      <div class="view-val">
+        {% set opts = ['Completo para entrada', 'Pendente de informações', 'Exige alinhamento'] %}
+        {% for opt in opts %}
+          {% if opt in sub.status_repasse %}
+            <span class="view-tag"><b>[X]</b> {{ opt }}</span>
+          {% else %}
+            <span class="view-tag-off">[ ] {{ opt }}</span>
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="view-field-row">
+      <div class="view-label">Próxima ação / responsável / data</div>
+      <div class="view-val {% if not sub.proxima_acao_resp_data %}empty{% endif %}">
+        {{ sub.proxima_acao_resp_data or 'Não informado' }}
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Regra de Passagem Obrigatória -->
+<div class="rule-banner">
+  <strong>Regra de passagem:</strong> o onboarding confirma o recebimento e devolve dúvidas ao comercial antes de iniciar a execução.
+</div>
+
+<!-- Barra de Ações (Somente Leitura e Download) -->
+<div class="action-bar">
+  <div class="action-status-text">
+    Visualização oficial de repasse (somente leitura)
+  </div>
+
+  <div class="action-buttons">
+    <a href="/documento/{{ sub.view_token }}" class="btn btn-secondary" target="_blank">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+      Ver Dossiê de Anexos
+    </a>
+    <a href="/pdf/{{ sub.view_token }}" class="btn btn-pdf" target="_blank">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      Baixar PDF preenchido
+    </a>
+    <button type="button" class="btn btn-secondary" onclick="window.print()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+      Imprimir
+    </button>
+  </div>
+</div>
+{% endblock %}
