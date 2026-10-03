@@ -129,7 +129,7 @@ class TestPJzenHandoff(unittest.TestCase):
 
         # 21 campos originais
         campos_esperados = [
-            "cliente_razao_social", "cnpj", "responsavel_comercial", "data_repasse",
+            "cliente_razao_social", "cnpj", "data_repasse",
             "tipo_demanda", "plano_contratado", "faturamento_mensal_esperado", "atividade_cnae_municipio",
             "tera_pro_labore", "simples_nacional", "tabela_apuracao_anexo", "regime_validado_por", "pontos_atencao_tecnicos",
             "frentes_acionadas", "demandas_acordadas", "documentos_pendentes", "prazo_combinado",
@@ -406,7 +406,6 @@ class TestPJzenHandoff(unittest.TestCase):
         self.assertEqual(v_res.status_code, 200)
         v_html = v_res.get_data(as_text=True)
         self.assertIn("lucas@pjzen.com.br", v_html)
-        self.assertIn("(21) 99999-8888", v_html)
         self.assertIn("financeiro@mendeseng.com.br", v_html)
         self.assertIn("(21) 3333-4444", v_html)
 

@@ -174,7 +174,6 @@ def generate_handoff_pdf(submission_data):
     # 2. Meta box: Preenchedor, Status, Data, Versão
     nome_preench = submission_data.get("nome_preenchedor") or "Não informado (Rascunho)"
     email_preench = submission_data.get("email_preenchedor") or "—"
-    tel_preench = submission_data.get("telefone_preenchedor") or "—"
     status_tec = "Enviado" if submission_data.get("status_tecnico") == "enviado" else "Rascunho"
     data_envio = submission_data.get("submitted_at")
     data_atualizacao = submission_data.get("updated_at")
@@ -206,14 +205,14 @@ def generate_handoff_pdf(submission_data):
         [
             Paragraph("<b>E-mail do Registrador:</b>", meta_label_style),
             Paragraph(html.escape(email_preench), meta_val_style),
-            Paragraph("<b>Telefone / WhatsApp:</b>", meta_label_style),
-            Paragraph(html.escape(tel_preench), meta_val_style)
+            Paragraph("<b>Versão do Registro:</b>", meta_label_style),
+            Paragraph(f"v{versao}", meta_val_style)
         ],
         [
             Paragraph("<b>Data do Registro:</b>", meta_label_style),
             Paragraph(data_formatada, meta_val_style),
-            Paragraph("<b>Versão do Registro:</b>", meta_label_style),
-            Paragraph(f"v{versao}", meta_val_style)
+            Paragraph("", meta_label_style),
+            Paragraph("", meta_val_style)
         ]
     ]
     meta_table = Table(meta_table_data, colWidths=[120, 160, 110, 130])
@@ -221,6 +220,7 @@ def generate_handoff_pdf(submission_data):
         ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#F2EFE9")),
         ('BOX', (0, 0), (-1, -1), 0.75, colors.HexColor("#E5E0D8")),
         ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#E5E0D8")),
+        ('SPAN', (1, 2), (3, 2)),
         ('TOPPADDING', (0, 0), (-1, -1), 3),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
         ('LEFTPADDING', (0, 0), (-1, -1), 6),
@@ -296,11 +296,9 @@ def generate_handoff_pdf(submission_data):
             "val2": submission_data.get("telefone_cliente")
         },
         {
-            "type": "2col",
-            "label1": "Responsável comercial",
-            "val1": submission_data.get("responsavel_comercial"),
-            "label2": "Data do repasse",
-            "val2": submission_data.get("data_repasse")
+            "type": "full",
+            "label": "Data do repasse",
+            "val": submission_data.get("data_repasse")
         },
         {
             "type": "full",
