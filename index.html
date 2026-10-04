@@ -22,6 +22,19 @@
   <link rel="stylesheet" href="static/css/style.css">
   <!-- html2pdf para geração de PDF em qualquer navegador e dispositivo -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script>
+    // Limpeza forçada de Service Worker e Caches antigos para exibição imediata
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        for (var r of regs) { r.unregister(); }
+      });
+    }
+    if ('caches' in window) {
+      caches.keys().then(function(names) {
+        for (var name of names) { caches.delete(name); }
+      });
+    }
+  </script>
 </head>
 <body>
   <div class="container" id="app-container">

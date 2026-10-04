@@ -32,10 +32,14 @@
   <!-- Rastreador de entrada e saída (Supabase ativo somente fora do localhost / na Hostinger) -->
   <script src="{{ url_for('static', filename='js/access-tracker.js') }}"></script>
   <script>
-    // Registro de Service Worker para PWA (celulares e offline)
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        for (var r of regs) { r.unregister(); }
+      });
+    }
+    if ('caches' in window) {
+      caches.keys().then(function(names) {
+        for (var name of names) { caches.delete(name); }
       });
     }
   </script>

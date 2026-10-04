@@ -17,12 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const shareModal = document.getElementById('share-modal');
   const modalCloseBtn = document.getElementById('modal-close-btn');
 
-  // Registro de PWA (celular offline e instalar na tela inicial)
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js?v=20261004d').then(reg => {
-      reg.update().catch(() => {});
-    }).catch(() => {});
-  }
+
 
   // Identificação de Parâmetros de URL (?view=..., ?edit=..., ?doc=...)
   const urlParams = new URLSearchParams(window.location.search);
