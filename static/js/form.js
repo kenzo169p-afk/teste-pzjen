@@ -378,7 +378,6 @@ document.addEventListener('DOMContentLoaded', () => {
       'email_preenchedor',
       'data_venda',
       'cliente_razao_social',
-      'cnpj',
       'email_cliente',
       'telefone_cliente',
       'data_repasse',

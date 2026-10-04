@@ -634,5 +634,24 @@ class TestPJzenHandoff(unittest.TestCase):
         edit_payload = get_edit.get_json()["data"]
         self.assertEqual(edit_payload.get("edit_token"), edit_token)
 
+    # 24. Campo CNPJ: deve ser opcional (sem badge de obrigatório)
+    def test_24_cnpj_opcional(self):
+        res = self.client.get("/")
+        self.assertEqual(res.status_code, 200)
+        html = res.get_data(as_text=True)
+
+        # Verifica que o CNPJ está marcado como opcional e não possui badge de asterisco
+        self.assertIn('for="cnpj">CNPJ <span style="font-size: 0.82rem; font-weight: normal; color: var(--slate-500);">(opcional)</span></label>', html)
+
+        # Envio sem CNPJ deve funcionar perfeitamente
+        res_post = self.client.post("/api/submit", json={
+            "nome_preenchedor": "Vendedor Comercial",
+            "cliente_razao_social": "Nova Empresa Em Abertura",
+            "cnpj": ""
+        })
+        self.assertEqual(res_post.status_code, 201)
+        data = res_post.get_json()
+        self.assertTrue(data["success"])
+
 if __name__ == "__main__":
     unittest.main()

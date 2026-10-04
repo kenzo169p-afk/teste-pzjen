@@ -260,7 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const requiredInputIds = [
       'nome_preenchedor', 'email_preenchedor', 'data_venda', 'cliente_razao_social',
-      'cnpj', 'email_cliente', 'telefone_cliente', 'data_repasse',
+      'email_cliente', 'telefone_cliente', 'data_repasse',
       'atividade_cnae_municipio', 'atividades_secundarias', 'pontos_atencao_tecnicos',
       'demandas_acordadas', 'documentos_pendentes', 'prazo_combinado',
       'responsavel_onboarding', 'responsavel_tecnico', 'proxima_acao_resp_data'
