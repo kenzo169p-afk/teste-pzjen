@@ -291,7 +291,7 @@ def generate_handoff_pdf(submission_data):
     sec1_rows = [
         {
             "type": "2col",
-            "label1": "Cliente / Razão social",
+            "label1": "Nome do cliente",
             "val1": submission_data.get("cliente_razao_social"),
             "label2": "CNPJ (se houver)",
             "val2": submission_data.get("cnpj")

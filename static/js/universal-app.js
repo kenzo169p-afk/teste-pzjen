@@ -642,7 +642,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="section-header">01 IDENTIFICAÇÃO E CONTRATAÇÃO | Comercial</div>
         <div class="section-body">
           <div class="form-grid-2">
-            <div class="view-field-row"><div class="view-label">Cliente / Razão social</div><div class="view-val">${sub.cliente_razao_social || 'Não informado'}</div></div>
+            <div class="view-field-row"><div class="view-label">Nome do cliente</div><div class="view-val">${sub.cliente_razao_social || 'Não informado'}</div></div>
             <div class="view-field-row"><div class="view-label">CNPJ</div><div class="view-val">${sub.cnpj || 'Não informado'}</div></div>
           </div>
           <div class="form-grid-2">
@@ -723,7 +723,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ${sub.email_preenchedor ? `<div style="font-size: 0.85rem; color: var(--slate-500);">E-mail: ${sub.email_preenchedor}</div>` : ''}
           </div>
           <div>
-            <div class="view-label">Cliente / Razão social</div>
+            <div class="view-label">Nome do cliente</div>
             <div class="view-val" style="font-weight: 700;">${sub.cliente_razao_social || 'Não informado'}</div>
             ${sub.cnpj ? `<div style="font-size: 0.85rem; color: var(--slate-500);">CNPJ: ${sub.cnpj}</div>` : ''}
           </div>
