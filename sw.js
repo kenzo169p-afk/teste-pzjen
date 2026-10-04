@@ -1,22 +1,16 @@
-// Service Worker para PJzen Handoff
-const CACHE_NAME = 'pjzen-handoff-v1';
+// Service Worker para PJzen Handoff (Network-First para garantir atualizações imediatas)
+const CACHE_NAME = 'pjzen-handoff-v3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './static/css/style.css',
+  './static/js/universal-app.js',
   './static/js/form.js',
   './static/img/logo.png',
-  './manifest.json',
-  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
-  'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js'
+  './manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE).catch(err => console.log('Cache parcial:', err));
-    })
-  );
   self.skipWaiting();
 });
 
@@ -24,25 +18,34 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+        keys.map((key) => caches.delete(key))
       );
     })
   );
   self.clients.claim();
 });
 
+// Network-First: busca sempre a versão mais recente do servidor; usa cache apenas se estiver sem internet
 self.addEventListener('fetch', (event) => {
-  // Ignora chamadas de API para não interceptar envio de dados
   if (event.request.url.includes('/api/')) {
     return;
   }
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      return cachedResponse || fetch(event.request).catch(() => {
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html');
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200 && event.request.method === 'GET') {
+          const clone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }
-      });
-    })
+        return networkResponse;
+      })
+      .catch(() => {
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) return cachedResponse;
+          if (event.request.mode === 'navigate') {
+            return caches.match('./index.html');
+          }
+        });
+      })
   );
 });

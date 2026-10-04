@@ -19,7 +19,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Registro de PWA (celular offline e instalar na tela inicial)
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js?v=20261004d').then(reg => {
+      reg.update().catch(() => {});
+    }).catch(() => {});
   }
 
   // Identificação de Parâmetros de URL (?view=..., ?edit=..., ?doc=...)

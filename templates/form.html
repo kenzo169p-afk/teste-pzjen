@@ -94,7 +94,7 @@
 
         <div class="form-group">
           <label class="field-label" for="cnpj">CNPJ <span style="font-size: 0.82rem; font-weight: normal; color: var(--slate-500);">(opcional)</span></label>
-          <input type="text" id="cnpj" name="cnpj" class="form-control" placeholder="00.000.000/0000-00" value="{{ sub.cnpj if sub else '' }}">
+          <input type="text" id="cnpj" name="cnpj" class="form-control" placeholder="00.000.000/0000-00 (opcional)" value="{{ sub.cnpj if sub else '' }}">
         </div>
       </div>
 
@@ -560,5 +560,5 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/form.js') }}"></script>
+<script src="{{ url_for('static', filename='js/form.js') }}?v=20261004d"></script>
 {% endblock %}
