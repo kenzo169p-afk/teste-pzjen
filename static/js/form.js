@@ -260,6 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'faturamento_mensal_esperado',
       'tera_pro_labore',
       'simples_nacional',
+      'regime_tributario',
       'tabela_apuracao_anexo',
       'frentes_acionadas',
       'status_repasse'
@@ -343,26 +344,120 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Clear invalid outline on typing or selection
+  form.addEventListener('input', (e) => {
+    if (e.target && e.target.classList.contains('is-invalid')) {
+      e.target.classList.remove('is-invalid');
+    }
+  });
+
+  form.addEventListener('change', (e) => {
+    if (e.target && e.target.classList.contains('is-invalid')) {
+      e.target.classList.remove('is-invalid');
+    }
+    if (e.target && e.target.type === 'checkbox') {
+      const group = e.target.closest('.checkbox-group');
+      if (group && group.classList.contains('is-invalid')) {
+        group.classList.remove('is-invalid');
+      }
+    }
+  });
+
+  function validateAllRequiredFields() {
+    let firstInvalid = null;
+    let hasError = false;
+
+    // Reset previous invalid states
+    form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+    if (nameCard) nameCard.classList.remove('error-state');
+    if (nameError) nameError.style.display = 'none';
+
+    // 1. Text, email, tel, date inputs and textareas
+    const requiredInputIds = [
+      'nome_preenchedor',
+      'email_preenchedor',
+      'data_venda',
+      'cliente_razao_social',
+      'cnpj',
+      'email_cliente',
+      'telefone_cliente',
+      'data_repasse',
+      'atividade_cnae_municipio',
+      'atividades_secundarias',
+      'pontos_atencao_tecnicos',
+      'demandas_acordadas',
+      'documentos_pendentes',
+      'prazo_combinado',
+      'responsavel_onboarding',
+      'responsavel_tecnico',
+      'proxima_acao_resp_data'
+    ];
+
+    requiredInputIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        const val = el.value.trim();
+        if (!val) {
+          el.classList.add('is-invalid');
+          hasError = true;
+          if (!firstInvalid) firstInvalid = el;
+        }
+      }
+    });
+
+    // 2. Checkbox groups
+    const requiredCheckboxGroups = [
+      'tipo_demanda',
+      'plano_contratado',
+      'faturamento_mensal_esperado',
+      'tera_pro_labore',
+      'regime_tributario',
+      'tabela_apuracao_anexo',
+      'frentes_acionadas',
+      'status_repasse'
+    ];
+
+    requiredCheckboxGroups.forEach(groupName => {
+      const checked = form.querySelectorAll(`input[name="${groupName}"]:checked`);
+      if (checked.length === 0) {
+        const firstCb = form.querySelector(`input[name="${groupName}"]`);
+        const groupEl = firstCb ? firstCb.closest('.checkbox-group') : null;
+        if (groupEl) {
+          groupEl.classList.add('is-invalid');
+          hasError = true;
+          if (!firstInvalid) firstInvalid = groupEl;
+        }
+      }
+    });
+
+    if (hasError) {
+      if (nameInput && nameInput.classList.contains('is-invalid')) {
+        if (nameCard) nameCard.classList.add('error-state');
+        if (nameError) {
+          nameError.textContent = 'Informe seu nome para enviar';
+          nameError.style.display = 'block';
+        }
+      }
+      if (firstInvalid) {
+        firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (typeof firstInvalid.focus === 'function') {
+          firstInvalid.focus();
+        }
+      }
+      showToast('Por favor, preencha todos os campos obrigatórios antes de enviar.', 'error');
+      return false;
+    }
+
+    return true;
+  }
+
   // 7. Submit / Save Changes action
   btnSubmit.addEventListener('click', async () => {
     if (btnSubmit.disabled) return;
 
-    // Validate Name: required, non-empty, non-whitespace
-    const nomeVal = nameInput ? nameInput.value.trim() : '';
-    if (!nomeVal) {
-      if (nameCard) nameCard.classList.add('error-state');
-      if (nameError) {
-        nameError.textContent = 'Informe seu nome para enviar';
-        nameError.style.display = 'block';
-      }
-      nameInput.focus();
-      showToast('Informe seu nome para enviar', 'error');
+    if (!validateAllRequiredFields()) {
       return;
     }
-
-    // Reset error state if valid
-    if (nameCard) nameCard.classList.remove('error-state');
-    if (nameError) nameError.style.display = 'none';
 
     // Prevent double click
     btnSubmit.disabled = true;
@@ -481,10 +576,50 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    // Botão de compartilhamento nativo para celulares/tablets (WhatsApp, AirDrop, etc.)
+    const btnShare = document.getElementById('btn-native-share');
+    if (btnShare) {
+      if (navigator.share) {
+        btnShare.style.display = 'inline-flex';
+        btnShare.onclick = async () => {
+          try {
+            await navigator.share({
+              title: 'PJzen | Handoff Registrado',
+              text: 'Registro de Handoff Comercial PJzen e documentos anexados:',
+              url: viewUrl
+            });
+          } catch (err) {
+            // Cancelado pelo usuário
+          }
+        };
+      } else {
+        btnShare.style.display = 'none';
+      }
+    }
+
     if (shareModal) {
       shareModal.style.display = 'flex';
     }
   }
+
+  // Geração de PDF no lado do cliente (fallback universal para celulares/tablets/hosts estáticos)
+  window.gerarPdfCliente = async function(nomeArquivo = 'PJzen-Handoff.pdf') {
+    const el = document.querySelector('.container') || document.body;
+    if (window.html2pdf) {
+      showToast('Gerando PDF no seu dispositivo...', 'normal');
+      const opt = {
+        margin: [10, 8, 10, 8],
+        filename: nomeArquivo,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      await html2pdf().set(opt).from(el).save();
+      showToast('PDF baixado com sucesso!', 'success');
+    } else {
+      window.print();
+    }
+  };
 
   // Open / Close Email Config Modal
   const emailCfgModal = document.getElementById('email-config-modal');

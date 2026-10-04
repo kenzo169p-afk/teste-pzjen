@@ -29,6 +29,11 @@
           E-mail: {{ sub.email_preenchedor }}
         </div>
       {% endif %}
+      {% if sub.data_venda %}
+        <div style="font-size: 0.85rem; color: var(--slate-500); margin-top: 2px;">
+          Data da venda: {{ sub.data_venda }}
+        </div>
+      {% endif %}
     </div>
 
     <div>

@@ -287,6 +287,20 @@ textarea.form-control {
   overflow-y: hidden;
 }
 
+.form-control.is-invalid {
+  border-color: var(--status-danger) !important;
+  background-color: #FEF2F2 !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15) !important;
+}
+
+.checkbox-group.is-invalid {
+  border: 1.5px solid var(--status-danger) !important;
+  border-radius: var(--radius-control);
+  padding: 8px;
+  background-color: #FEF2F2;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}
+
 /* Caixas de Seleção (Checkboxes Independentes) */
 .checkbox-group {
   display: flex;
@@ -963,4 +977,50 @@ button, .btn, .checkbox-label, input, select, textarea {
     margin-bottom: 4px;
   }
 }
+
+/* Suporte a entalhes de celular (iPhone notch, barra inferior iOS) */
+body {
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+.action-bar {
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Estilos de Impressão Direta e Geração de PDF */
+@media print {
+  body {
+    background: #FFFFFF !important;
+    color: #000000 !important;
+    padding: 0 !important;
+  }
+
+  .action-bar,
+  .modal-overlay,
+  .help-notice,
+  #btn-trigger-upload,
+  .btn-remove-attachment,
+  #btn-save-draft,
+  #btn-submit-form,
+  .toast,
+  #email-config-modal,
+  .pwa-install-banner {
+    display: none !important;
+  }
+
+  .header-card,
+  .form-section,
+  .name-highlight-card {
+    box-shadow: none !important;
+    border: 1px solid #CCCCCC !important;
+    page-break-inside: avoid;
+    margin-bottom: 16px !important;
+  }
+
+  .container {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+}
+
 

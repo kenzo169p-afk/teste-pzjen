@@ -13,6 +13,7 @@ CHECKBOX_FIELDS = {
     "faturamento_mensal_esperado",
     "tera_pro_labore",
     "simples_nacional",
+    "regime_tributario",
     "tabela_apuracao_anexo",
     "frentes_acionadas",
     "status_repasse"
@@ -24,6 +25,7 @@ ALL_DATA_FIELDS = [
     "nome_preenchedor",
     "email_preenchedor",
     "telefone_preenchedor",
+    "data_venda",
     "cliente_razao_social",
     "cnpj",
     "email_cliente",
@@ -34,8 +36,10 @@ ALL_DATA_FIELDS = [
     "plano_contratado",
     "faturamento_mensal_esperado",
     "atividade_cnae_municipio",
+    "atividades_secundarias",
     "tera_pro_labore",
     "simples_nacional",
+    "regime_tributario",
     "tabela_apuracao_anexo",
     "regime_validado_por",
     "pontos_atencao_tecnicos",
@@ -71,6 +75,7 @@ def init_db(db_path=None):
                 nome_preenchedor TEXT,
                 email_preenchedor TEXT,
                 telefone_preenchedor TEXT,
+                data_venda TEXT,
                 cliente_razao_social TEXT,
                 cnpj TEXT,
                 email_cliente TEXT,
@@ -81,8 +86,10 @@ def init_db(db_path=None):
                 plano_contratado TEXT,
                 faturamento_mensal_esperado TEXT,
                 atividade_cnae_municipio TEXT,
+                atividades_secundarias TEXT,
                 tera_pro_labore TEXT,
                 simples_nacional TEXT,
+                regime_tributario TEXT,
                 tabela_apuracao_anexo TEXT,
                 regime_validado_por TEXT,
                 pontos_atencao_tecnicos TEXT,
@@ -109,6 +116,9 @@ def init_db(db_path=None):
             ("telefone_preenchedor", "TEXT"),
             ("email_cliente", "TEXT"),
             ("telefone_cliente", "TEXT"),
+            ("atividades_secundarias", "TEXT"),
+            ("regime_tributario", "TEXT"),
+            ("data_venda", "TEXT"),
             ("anexos_documentos", "TEXT NOT NULL DEFAULT '[]'")
         ]:
             try:
@@ -119,6 +129,12 @@ def init_db(db_path=None):
 
 def _sanitize_data(data):
     """Normalize input data: ensure json strings for lists/checkboxes and trimmed/empty string for texts."""
+    # Sincroniza regime_tributario e simples_nacional
+    if not data.get("regime_tributario") and data.get("simples_nacional"):
+        data["regime_tributario"] = data["simples_nacional"]
+    elif not data.get("simples_nacional") and data.get("regime_tributario"):
+        data["simples_nacional"] = data["regime_tributario"]
+
     sanitized = {}
     for field in ALL_DATA_FIELDS:
         val = data.get(field)
@@ -163,6 +179,13 @@ def _row_to_dict(row):
             d["history"] = []
     else:
         d["history"] = []
+
+    # Sincroniza regime_tributario e simples_nacional para leituras
+    if not d.get("regime_tributario") and d.get("simples_nacional"):
+        d["regime_tributario"] = d["simples_nacional"]
+    elif not d.get("simples_nacional") and d.get("regime_tributario"):
+        d["simples_nacional"] = d["regime_tributario"]
+
     return d
 
 def create_submission(data, is_draft=False, db_path=None):

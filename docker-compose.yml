@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  pjzen-app:
+    build: .
+    container_name: pjzen_handoff
+    restart: always
+    ports:
+      - "8080:80"
+    volumes:
+      - ./uploads:/var/www/html/uploads
+      - ./handoff.db:/var/www/html/handoff.db

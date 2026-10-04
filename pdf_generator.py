@@ -195,6 +195,15 @@ def generate_handoff_pdf(submission_data):
     else:
         data_formatada = "—"
 
+    data_venda_raw = submission_data.get("data_venda")
+    data_venda_formatada = "—"
+    if data_venda_raw:
+        try:
+            dt_v = datetime.strptime(data_venda_raw, "%Y-%m-%d")
+            data_venda_formatada = dt_v.strftime("%d/%m/%Y")
+        except Exception:
+            data_venda_formatada = str(data_venda_raw)
+
     meta_table_data = [
         [
             Paragraph("<b>Nome de quem preencheu:</b>", meta_label_style),
@@ -211,8 +220,8 @@ def generate_handoff_pdf(submission_data):
         [
             Paragraph("<b>Data do Registro:</b>", meta_label_style),
             Paragraph(data_formatada, meta_val_style),
-            Paragraph("", meta_label_style),
-            Paragraph("", meta_val_style)
+            Paragraph("<b>Data da Venda:</b>", meta_label_style),
+            Paragraph(html.escape(data_venda_formatada), meta_val_style)
         ]
     ]
     meta_table = Table(meta_table_data, colWidths=[120, 160, 110, 130])
@@ -220,7 +229,6 @@ def generate_handoff_pdf(submission_data):
         ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor("#F2EFE9")),
         ('BOX', (0, 0), (-1, -1), 0.75, colors.HexColor("#E5E0D8")),
         ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#E5E0D8")),
-        ('SPAN', (1, 2), (3, 2)),
         ('TOPPADDING', (0, 0), (-1, -1), 3),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
         ('LEFTPADDING', (0, 0), (-1, -1), 6),
@@ -331,6 +339,11 @@ def generate_handoff_pdf(submission_data):
             "type": "full",
             "label": "Atividade principal / CNAE e município",
             "val": submission_data.get("atividade_cnae_municipio")
+        },
+        {
+            "type": "full",
+            "label": "Atividades secundárias",
+            "val": submission_data.get("atividades_secundarias")
         }
     ]
     story.append(make_fields_table(sec1_rows))
@@ -350,26 +363,24 @@ def generate_handoff_pdf(submission_data):
         },
         {
             "type": "full",
-            "label": "Simples Nacional",
+            "label": "Regime tributário",
             "val": _render_checkbox_group(
-                ["Puro", "Híbrido", "Não aplicável", "Em análise"],
-                submission_data.get("simples_nacional"),
+                ["Lucro presumido", "Simples nacional puro", "Simples nacional híbrido"],
+                [
+                    "Simples nacional puro" if v == "Puro" else ("Simples nacional híbrido" if v == "Híbrido" else v)
+                    for v in (submission_data.get("regime_tributario") or submission_data.get("simples_nacional") or [])
+                ],
                 field_value_style
             )
         },
         {
             "type": "full",
-            "label": "Tabela de apuração / Anexo",
+            "label": "Tabelas e anexo",
             "val": _render_checkbox_group(
-                ["III", "IV", "V", "I", "II", "A confirmar"],
+                ["III", "IV", "V", "V com Fator R", "Lucro Presumido"],
                 submission_data.get("tabela_apuracao_anexo"),
                 field_value_style
             )
-        },
-        {
-            "type": "full",
-            "label": "Regime tributário e enquadramento validados por",
-            "val": submission_data.get("regime_validado_por")
         },
         {
             "type": "full",
@@ -399,7 +410,7 @@ def generate_handoff_pdf(submission_data):
         },
         {
             "type": "full",
-            "label": "Documentos / acessos pendentes",
+            "label": "Descrição de documentos anexados",
             "val": submission_data.get("documentos_pendentes")
         },
         {

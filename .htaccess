@@ -1,0 +1,19 @@
+# PJzen Apache / LiteSpeed Rewrite Rules
+RewriteEngine On
+RewriteBase /
+
+# Permitir arquivos e pastas existentes (static, uploads, index.html, etc.)
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Redirecionar rotas de API para api.php se PHP estiver disponível
+RewriteRule ^api/(.*)$ api.php [QSA,L]
+
+# Redirecionar rotas view/edit/documento para index.php ou index.html
+RewriteRule ^view/(.*)$ index.php?view=$1 [QSA,L]
+RewriteRule ^edit/(.*)$ index.php?edit=$1 [QSA,L]
+RewriteRule ^documento/(.*)$ index.php?doc=$1 [QSA,L]
+
+# Fallback para index.html
+RewriteRule ^(.*)$ index.html [QSA,L]

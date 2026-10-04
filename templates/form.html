@@ -34,7 +34,7 @@
   <div class="name-highlight-card" id="name-card">
     <div class="form-group">
       <label class="field-label" for="nome_preenchedor">
-        Nome de quem está preenchendo <span class="required-badge">* (Obrigatório para enviar)</span>
+        Nome de quem está preenchendo <span class="required-badge">*</span>
       </label>
       <input type="text" 
              id="nome_preenchedor" 
@@ -46,24 +46,37 @@
       <div id="name-error-msg" style="display: none; color: var(--status-danger); font-size: 0.85rem; font-weight: 600; margin-top: 4px;"></div>
     </div>
 
-    <div class="form-group" style="margin-top: 14px;">
-      <label class="field-label" for="email_preenchedor">
-        E-mail do destinatário / registrador <span class="optional-hint">(para envio automático do comprovante)</span>
-      </label>
-      <input type="email" 
-             id="email_preenchedor" 
-             name="email_preenchedor" 
-             class="form-control" 
-             placeholder="seu.email@exemplo.com.br"
-             value="{{ sub.email_preenchedor if sub else '' }}" 
-             autocomplete="email">
+    <div class="form-grid-2" style="margin-top: 14px;">
+      <div class="form-group">
+        <label class="field-label" for="email_preenchedor">
+          E-mail do destinatário / registrador <span class="required-badge">*</span>
+        </label>
+        <input type="email" 
+               id="email_preenchedor" 
+               name="email_preenchedor" 
+               class="form-control" 
+               placeholder="seu.email@exemplo.com.br"
+               value="{{ sub.email_preenchedor if sub else '' }}" 
+               autocomplete="email">
+      </div>
+
+      <div class="form-group">
+        <label class="field-label" for="data_venda">
+          Data da venda <span class="required-badge">*</span>
+        </label>
+        <input type="date" 
+               id="data_venda" 
+               name="data_venda" 
+               class="form-control" 
+               value="{{ sub.data_venda if sub else '' }}">
+      </div>
     </div>
 
     <div class="help-notice">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
       <div>
-        <strong>Apenas seu nome é obrigatório. As demais informações podem ser preenchidas depois.</strong><br>
-        O nome identifica quem fez o preenchimento; não substitui os responsáveis técnico ou de onboarding.
+        <strong>Todos os itens do formulário são de preenchimento obrigatório para envio.</strong><br>
+        O preenchimento completo garante a qualidade do diagnóstico antes de transferir o cliente para o onboarding e operação.
       </div>
     </div>
   </div>
@@ -75,35 +88,35 @@
       
       <div class="form-grid-2">
         <div class="form-group">
-          <label class="field-label" for="cliente_razao_social">Cliente / Razão social <span class="optional-hint">(opcional)</span></label>
+          <label class="field-label" for="cliente_razao_social">Cliente / Razão social <span class="required-badge">*</span></label>
           <input type="text" id="cliente_razao_social" name="cliente_razao_social" class="form-control" placeholder="Razão social ou nome fantasia" value="{{ sub.cliente_razao_social if sub else '' }}">
         </div>
 
         <div class="form-group">
-          <label class="field-label" for="cnpj">CNPJ (se houver) <span class="optional-hint">(opcional)</span></label>
+          <label class="field-label" for="cnpj">CNPJ <span class="required-badge">*</span></label>
           <input type="text" id="cnpj" name="cnpj" class="form-control" placeholder="00.000.000/0000-00" value="{{ sub.cnpj if sub else '' }}">
         </div>
       </div>
 
       <div class="form-grid-2">
         <div class="form-group">
-          <label class="field-label" for="email_cliente">E-mail do novo cliente <span class="optional-hint">(opcional)</span></label>
+          <label class="field-label" for="email_cliente">E-mail do novo cliente <span class="required-badge">*</span></label>
           <input type="email" id="email_cliente" name="email_cliente" class="form-control" placeholder="contato@cliente.com.br" value="{{ sub.email_cliente if sub else '' }}">
         </div>
 
         <div class="form-group">
-          <label class="field-label" for="telefone_cliente">Telefone do novo cliente <span class="optional-hint">(opcional)</span></label>
+          <label class="field-label" for="telefone_cliente">Telefone do novo cliente <span class="required-badge">*</span></label>
           <input type="tel" id="telefone_cliente" name="telefone_cliente" class="form-control phone-mask" placeholder="(00) 00000-0000" value="{{ sub.telefone_cliente if sub else '' }}">
         </div>
       </div>
 
       <div class="form-group">
-        <label class="field-label" for="data_repasse">Data do repasse <span class="optional-hint">(opcional)</span></label>
+        <label class="field-label" for="data_repasse">Data do repasse <span class="required-badge">*</span></label>
         <input type="date" id="data_repasse" name="data_repasse" class="form-control" value="{{ sub.data_repasse if sub else '' }}">
       </div>
 
       <div class="form-group">
-        <label class="field-label">Tipo de demanda <span class="optional-hint">(opcional)</span></label>
+        <label class="field-label">Tipo de demanda <span class="required-badge">*</span></label>
         <div class="checkbox-group">
           {% set sel_tipo = sub.tipo_demanda if sub else [] %}
           <label class="checkbox-label">
@@ -122,7 +135,7 @@
       </div>
 
       <div class="form-group">
-        <label class="field-label">Plano contratado <span class="optional-hint">(opcional)</span></label>
+        <label class="field-label">Plano contratado <span class="required-badge">*</span></label>
         <div class="checkbox-group">
           {% set sel_plano = sub.plano_contratado if sub else [] %}
           <label class="checkbox-label">
@@ -141,7 +154,7 @@
       </div>
 
       <div class="form-group">
-        <label class="field-label">Faturamento mensal esperado <span class="optional-hint">(opcional)</span></label>
+        <label class="field-label">Faturamento mensal esperado <span class="required-badge">*</span></label>
         <div class="checkbox-group">
           {% set sel_fat = sub.faturamento_mensal_esperado if sub else [] %}
           <label class="checkbox-label">
@@ -160,8 +173,13 @@
       </div>
 
       <div class="form-group">
-        <label class="field-label" for="atividade_cnae_municipio">Atividade principal / CNAE e município <span class="optional-hint">(opcional)</span></label>
+        <label class="field-label" for="atividade_cnae_municipio">Atividade principal / CNAE e município <span class="required-badge">*</span></label>
         <input type="text" id="atividade_cnae_municipio" name="atividade_cnae_municipio" class="form-control" placeholder="Ex: Desenvolvimento de software (CNAE 6201-5/01) - São Paulo/SP" value="{{ sub.atividade_cnae_municipio if sub else '' }}">
+      </div>
+
+      <div class="form-group">
+        <label class="field-label" for="atividades_secundarias">Atividades secundárias <span class="required-badge">*</span></label>
+        <input type="text" id="atividades_secundarias" name="atividades_secundarias" class="form-control" placeholder="Ex: Consultoria em TI (CNAE 6202-3/00), Treinamento (CNAE 8599-6/04)" value="{{ sub.atividades_secundarias if sub else '' }}">
       </div>
 
     </div>
@@ -173,7 +191,7 @@
     <div class="section-body">
 
       <div class="form-group">
-        <label class="field-label">Terá pró-labore? <span class="optional-hint">(opcional)</span></label>
+        <label class="field-label">Terá pró-labore? <span class="required-badge">*</span></label>
         <div class="checkbox-group">
           {% set sel_pro = sub.tera_pro_labore if sub else [] %}
           <label class="checkbox-label">
@@ -192,30 +210,26 @@
       </div>
 
       <div class="form-group">
-        <label class="field-label">Simples Nacional <span class="optional-hint">(opcional)</span></label>
+        <label class="field-label">Regime tributário <span class="required-badge">*</span></label>
         <div class="checkbox-group">
-          {% set sel_sn = sub.simples_nacional if sub else [] %}
+          {% set sel_regime = sub.regime_tributario if (sub and sub.regime_tributario) else (sub.simples_nacional if sub else []) %}
           <label class="checkbox-label">
-            <input type="checkbox" name="simples_nacional" value="Puro" {% if 'Puro' in sel_sn %}checked{% endif %}>
-            Puro
+            <input type="checkbox" name="regime_tributario" value="Lucro presumido" {% if 'Lucro presumido' in sel_regime %}checked{% endif %}>
+            Lucro presumido
           </label>
           <label class="checkbox-label">
-            <input type="checkbox" name="simples_nacional" value="Híbrido" {% if 'Híbrido' in sel_sn %}checked{% endif %}>
-            Híbrido
+            <input type="checkbox" name="regime_tributario" value="Simples nacional puro" {% if 'Simples nacional puro' in sel_regime or 'Puro' in sel_regime %}checked{% endif %}>
+            Simples nacional puro
           </label>
           <label class="checkbox-label">
-            <input type="checkbox" name="simples_nacional" value="Não aplicável" {% if 'Não aplicável' in sel_sn %}checked{% endif %}>
-            Não aplicável
-          </label>
-          <label class="checkbox-label">
-            <input type="checkbox" name="simples_nacional" value="Em análise" {% if 'Em análise' in sel_sn %}checked{% endif %}>
-            Em análise
+            <input type="checkbox" name="regime_tributario" value="Simples nacional híbrido" {% if 'Simples nacional híbrido' in sel_regime or 'Híbrido' in sel_regime %}checked{% endif %}>
+            Simples nacional híbrido
           </label>
         </div>
       </div>
 
       <div class="form-group">
-        <label class="field-label">Tabela de apuração / Anexo <span class="optional-hint">(opcional)</span></label>
+        <label class="field-label">Tabelas e anexo <span class="required-badge">*</span></label>
         <div class="checkbox-group">
           {% set sel_anx = sub.tabela_apuracao_anexo if sub else [] %}
           <label class="checkbox-label">
@@ -231,27 +245,18 @@
             V
           </label>
           <label class="checkbox-label">
-            <input type="checkbox" name="tabela_apuracao_anexo" value="I" {% if 'I' in sel_anx %}checked{% endif %}>
-            I
+            <input type="checkbox" name="tabela_apuracao_anexo" value="V com Fator R" {% if 'V com Fator R' in sel_anx %}checked{% endif %}>
+            V com Fator R
           </label>
           <label class="checkbox-label">
-            <input type="checkbox" name="tabela_apuracao_anexo" value="II" {% if 'II' in sel_anx %}checked{% endif %}>
-            II
-          </label>
-          <label class="checkbox-label">
-            <input type="checkbox" name="tabela_apuracao_anexo" value="A confirmar" {% if 'A confirmar' in sel_anx %}checked{% endif %}>
-            A confirmar
+            <input type="checkbox" name="tabela_apuracao_anexo" value="Lucro Presumido" {% if 'Lucro Presumido' in sel_anx or 'Lucro presumido' in sel_anx %}checked{% endif %}>
+            Lucro Presumido
           </label>
         </div>
       </div>
 
       <div class="form-group">
-        <label class="field-label" for="regime_validado_por">Regime tributário e enquadramento validados por <span class="optional-hint">(opcional)</span></label>
-        <input type="text" id="regime_validado_por" name="regime_validado_por" class="form-control" placeholder="Nome do especialista responsável" value="{{ sub.regime_validado_por if sub else '' }}">
-      </div>
-
-      <div class="form-group">
-        <label class="field-label" for="pontos_atencao_tecnicos">Pontos de atenção técnicos / premissas da análise <span class="optional-hint">(opcional)</span></label>
+        <label class="field-label" for="pontos_atencao_tecnicos">Pontos de atenção técnicos / premissas da análise <span class="required-badge">*</span></label>
         <textarea id="pontos_atencao_tecnicos" name="pontos_atencao_tecnicos" class="form-control" placeholder="Detalhes técnicos, premissas de faturamento, fator R, pendências fiscais...">{{ sub.pontos_atencao_tecnicos if sub else '' }}</textarea>
       </div>
 
@@ -264,7 +269,7 @@
     <div class="section-body">
 
       <div class="form-group">
-        <label class="field-label">Frentes acionadas <span class="optional-hint">(opcional)</span></label>
+        <label class="field-label">Frentes acionadas <span class="required-badge">*</span></label>
         <div class="checkbox-group">
           {% set sel_frentes = sub.frentes_acionadas if sub else [] %}
           <label class="checkbox-label">
@@ -295,19 +300,19 @@
       </div>
 
       <div class="form-group">
-        <label class="field-label" for="demandas_acordadas">Demandas acordadas, pendências e entregáveis para o onboarding <span class="optional-hint">(opcional)</span></label>
+        <label class="field-label" for="demandas_acordadas">Demandas acordadas, pendências e entregáveis para o onboarding <span class="required-badge">*</span></label>
         <textarea id="demandas_acordadas" name="demandas_acordadas" class="form-control" placeholder="Lista de entregáveis, escopo combinado e passos operacionais...">{{ sub.demandas_acordadas if sub else '' }}</textarea>
       </div>
 
       <div class="form-group">
-        <label class="field-label" for="documentos_pendentes">Documentos / acessos pendentes <span class="optional-hint">(opcional, expansível - não exige upload)</span></label>
+        <label class="field-label" for="documentos_pendentes">Descrição de documentos anexados <span class="required-badge">*</span></label>
         <textarea id="documentos_pendentes" name="documentos_pendentes" class="form-control" placeholder="Ex: Certificado digital A1, procuração RFB, extratos bancários...">{{ sub.documentos_pendentes if sub else '' }}</textarea>
       </div>
 
       <!-- Upload de Documentos, Imagens e Vídeos de até 10s no Supabase -->
       <div class="form-group" style="background: var(--pj-offwhite); border: 1px dashed var(--slate-300); border-radius: var(--radius-control); padding: 18px; margin-top: 4px;">
         <label class="field-label" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
-          <span>Anexar Documentos, Imagens ou Vídeos de até 10 segundos <span class="optional-hint">(armazenamento em nuvem Supabase)</span></span>
+          <span>Anexar Documentos, Imagens ou Vídeos de até 10 segundos <span class="optional-hint">(opcional - armazenamento em nuvem Supabase)</span></span>
         </label>
         <p style="font-size: 0.85rem; color: var(--slate-500); margin-bottom: 12px;">
           Anexe contratos, imagens ou vídeos explicativos de até 10s. Cada documento registrará automaticamente a data e hora do seu computador.
@@ -348,7 +353,7 @@
       </div>
 
       <div class="form-group">
-        <label class="field-label" for="prazo_combinado">Prazo combinado com o cliente <span class="optional-hint">(opcional)</span></label>
+        <label class="field-label" for="prazo_combinado">Prazo combinado com o cliente <span class="required-badge">*</span></label>
         <input type="text" id="prazo_combinado" name="prazo_combinado" class="form-control" placeholder="Ex: 5 dias úteis, 15/10/2026, até fechamento do mês..." value="{{ sub.prazo_combinado if sub else '' }}">
       </div>
 
@@ -362,18 +367,18 @@
 
       <div class="form-grid-2">
         <div class="form-group">
-          <label class="field-label" for="responsavel_onboarding">Responsável pelo onboarding <span class="optional-hint">(opcional)</span></label>
+          <label class="field-label" for="responsavel_onboarding">Responsável pelo onboarding <span class="required-badge">*</span></label>
           <input type="text" id="responsavel_onboarding" name="responsavel_onboarding" class="form-control" placeholder="Nome do responsável" value="{{ sub.responsavel_onboarding if sub else '' }}">
         </div>
 
         <div class="form-group">
-          <label class="field-label" for="responsavel_tecnico">Responsável técnico <span class="optional-hint">(opcional)</span></label>
+          <label class="field-label" for="responsavel_tecnico">Responsável técnico <span class="required-badge">*</span></label>
           <input type="text" id="responsavel_tecnico" name="responsavel_tecnico" class="form-control" placeholder="Nome do especialista técnico" value="{{ sub.responsavel_tecnico if sub else '' }}">
         </div>
       </div>
 
       <div class="form-group">
-        <label class="field-label">Status <span class="optional-hint">(opcional)</span></label>
+        <label class="field-label">Status <span class="required-badge">*</span></label>
         <div class="checkbox-group">
           {% set sel_status = sub.status_repasse if sub else [] %}
           <label class="checkbox-label">
@@ -392,7 +397,7 @@
       </div>
 
       <div class="form-group">
-        <label class="field-label" for="proxima_acao_resp_data">Próxima ação / responsável / data <span class="optional-hint">(opcional, expansível)</span></label>
+        <label class="field-label" for="proxima_acao_resp_data">Próxima ação / responsável / data <span class="required-badge">*</span></label>
         <textarea id="proxima_acao_resp_data" name="proxima_acao_resp_data" class="form-control" placeholder="Descreva a próxima ação imediata, o responsável encarregado e o prazo acordado...">{{ sub.proxima_acao_resp_data if sub else '' }}</textarea>
       </div>
 
@@ -494,7 +499,11 @@
     </div>
 
     <!-- Ações do Modal -->
-    <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
+    <button type="button" id="btn-native-share" class="btn btn-secondary" style="width: 100%; display: none; margin-bottom: 8px; font-weight: 600;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+      Compartilhar no Celular / WhatsApp
+    </button>
+    <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
       <a id="modal-pdf-download" href="#" class="btn btn-pdf" target="_blank" style="flex: 1;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
         Baixar PDF preenchido

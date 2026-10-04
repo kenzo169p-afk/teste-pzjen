@@ -50,6 +50,14 @@ def view_documento(token):
         ), 404
     return render_template("documento.html", sub=sub)
 
+@app.route("/manifest.json")
+def serve_manifest():
+    return send_from_directory(".", "manifest.json", mimetype="application/manifest+json")
+
+@app.route("/sw.js")
+def serve_sw():
+    return send_from_directory(".", "sw.js", mimetype="application/javascript")
+
 @app.route("/uploads/<path:filename>")
 def serve_upload(filename):
     """Serve arquivos locais quando em modo fallback (sem chaves do Supabase)."""

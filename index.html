@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="theme-color" content="#FFD100">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="PJzen Handoff">
+  <link rel="icon" type="image/png" href="static/img/logo.png">
+  <link rel="apple-touch-icon" href="static/img/logo.png">
+  <link rel="manifest" href="manifest.json">
+  <title>PJzen | Handoff Comercial → Onboarding & Operação</title>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="static/css/style.css">
+  <!-- html2pdf para geração de PDF em qualquer navegador e dispositivo -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+  <div class="container" id="app-container">
+    <!-- Header Original PJzen -->
+    <header class="header-card">
+      <div class="header-top-row">
+        <img src="static/img/logo.png" alt="Logo PJzen" class="brand-logo">
+        <div class="brand-info">
+          <div class="brand-title">
+            <span>PJzen | HANDOFF COMERCIAL → ONBOARDING & OPERAÇÃO</span>
+            <span id="app-status-badge" class="status-badge" style="display: none;"></span>
+          </div>
+          <p class="brand-subtitle">Diagnóstico de entrada • preencher antes de transferir o cliente</p>
+          <span class="brand-tagline">Sua vida PJ mais zen</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- View Mode Container (Somente Leitura) -->
+    <div id="view-mode-container" style="display: none;"></div>
+
+    <!-- Form Container (Preenchimento e Edição) -->
+    <form id="handoff-form">
+      <!-- Campo Obrigatório de Quem Preenche e Contatos -->
+      <div class="name-highlight-card" id="name-card">
+        <div class="form-group">
+          <label class="field-label" for="nome_preenchedor">
+            Nome de quem está preenchendo <span class="required-badge">*</span>
+          </label>
+          <input type="text" id="nome_preenchedor" name="nome_preenchedor" class="form-control" placeholder="Informe seu nome" autocomplete="name">
+          <div id="name-error-msg" style="display: none; color: var(--status-danger); font-size: 0.85rem; font-weight: 600; margin-top: 4px;"></div>
+        </div>
+
+        <div class="form-grid-2" style="margin-top: 14px;">
+          <div class="form-group">
+            <label class="field-label" for="email_preenchedor">
+              E-mail do destinatário / registrador <span class="required-badge">*</span>
+            </label>
+            <input type="email" id="email_preenchedor" name="email_preenchedor" class="form-control" placeholder="seu.email@exemplo.com.br" autocomplete="email">
+          </div>
+
+          <div class="form-group">
+            <label class="field-label" for="data_venda">
+              Data da venda <span class="required-badge">*</span>
+            </label>
+            <input type="date" id="data_venda" name="data_venda" class="form-control">
+          </div>
+        </div>
+
+        <div class="help-notice">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 1px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          <div>
+            <strong>Todos os itens do formulário são de preenchimento obrigatório para envio.</strong><br>
+            O preenchimento completo garante a qualidade do diagnóstico antes de transferir o cliente para o onboarding e operação.
+          </div>
+        </div>
+      </div>
+
+      <!-- 01 IDENTIFICAÇÃO E CONTRATAÇÃO | Comercial -->
+      <section class="form-section">
+        <div class="section-header">01 IDENTIFICAÇÃO E CONTRATAÇÃO | Comercial</div>
+        <div class="section-body">
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="field-label" for="cliente_razao_social">Cliente / Razão social <span class="required-badge">*</span></label>
+              <input type="text" id="cliente_razao_social" name="cliente_razao_social" class="form-control" placeholder="Razão social ou nome fantasia">
+            </div>
+
+            <div class="form-group">
+              <label class="field-label" for="cnpj">CNPJ <span class="required-badge">*</span></label>
+              <input type="text" id="cnpj" name="cnpj" class="form-control" placeholder="00.000.000/0000-00">
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="field-label" for="email_cliente">E-mail do novo cliente <span class="required-badge">*</span></label>
+              <input type="email" id="email_cliente" name="email_cliente" class="form-control" placeholder="contato@cliente.com.br">
+            </div>
+
+            <div class="form-group">
+              <label class="field-label" for="telefone_cliente">Telefone do novo cliente <span class="required-badge">*</span></label>
+              <input type="tel" id="telefone_cliente" name="telefone_cliente" class="form-control phone-mask" placeholder="(00) 00000-0000">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="field-label" for="data_repasse">Data do repasse <span class="required-badge">*</span></label>
+            <input type="date" id="data_repasse" name="data_repasse" class="form-control">
+          </div>
+
+          <div class="form-group">
+            <label class="field-label">Tipo de demanda <span class="required-badge">*</span></label>
+            <div class="checkbox-group">
+              <label class="checkbox-label"><input type="checkbox" name="tipo_demanda" value="Abertura"> Abertura</label>
+              <label class="checkbox-label"><input type="checkbox" name="tipo_demanda" value="Troca de contador"> Troca de contador</label>
+              <label class="checkbox-label"><input type="checkbox" name="tipo_demanda" value="Regularização / outro"> Regularização / outro</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="field-label">Plano contratado <span class="required-badge">*</span></label>
+            <div class="checkbox-group">
+              <label class="checkbox-label"><input type="checkbox" name="plano_contratado" value="PJzen Plus"> PJzen Plus</label>
+              <label class="checkbox-label"><input type="checkbox" name="plano_contratado" value="PJzen Pro"> PJzen Pro</label>
+              <label class="checkbox-label"><input type="checkbox" name="plano_contratado" value="PJzen One"> PJzen One</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="field-label">Faturamento mensal esperado <span class="required-badge">*</span></label>
+            <div class="checkbox-group">
+              <label class="checkbox-label"><input type="checkbox" name="faturamento_mensal_esperado" value="R$ 0 a R$ 25 mil"> R$ 0 a R$ 25 mil</label>
+              <label class="checkbox-label"><input type="checkbox" name="faturamento_mensal_esperado" value="R$ 25.000,01 a R$ 50 mil"> R$ 25.000,01 a R$ 50 mil</label>
+              <label class="checkbox-label"><input type="checkbox" name="faturamento_mensal_esperado" value="R$ 50.000,01 a R$ 200 mil"> R$ 50.000,01 a R$ 200 mil</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="field-label" for="atividade_cnae_municipio">Atividade principal / CNAE e município <span class="required-badge">*</span></label>
+            <input type="text" id="atividade_cnae_municipio" name="atividade_cnae_municipio" class="form-control" placeholder="Ex: Desenvolvimento de software (CNAE 6201-5/01) - São Paulo/SP">
+          </div>
+
+          <div class="form-group">
+            <label class="field-label" for="atividades_secundarias">Atividades secundárias <span class="required-badge">*</span></label>
+            <input type="text" id="atividades_secundarias" name="atividades_secundarias" class="form-control" placeholder="Ex: Consultoria em TI (CNAE 6202-3/00), Treinamento (CNAE 8599-6/04)">
+          </div>
+        </div>
+      </section>
+
+      <!-- 02 DIAGNÓSTICO TRIBUTÁRIO | Time técnico -->
+      <section class="form-section">
+        <div class="section-header">02 DIAGNÓSTICO TRIBUTÁRIO | Time técnico</div>
+        <div class="section-body">
+          <div class="form-group">
+            <label class="field-label">Terá pró-labore? <span class="required-badge">*</span></label>
+            <div class="checkbox-group">
+              <label class="checkbox-label"><input type="checkbox" name="tera_pro_labore" value="Sim"> Sim</label>
+              <label class="checkbox-label"><input type="checkbox" name="tera_pro_labore" value="Não"> Não</label>
+              <label class="checkbox-label"><input type="checkbox" name="tera_pro_labore" value="A definir"> A definir</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="field-label">Regime tributário <span class="required-badge">*</span></label>
+            <div class="checkbox-group">
+              <label class="checkbox-label"><input type="checkbox" name="regime_tributario" value="Lucro presumido"> Lucro presumido</label>
+              <label class="checkbox-label"><input type="checkbox" name="regime_tributario" value="Simples nacional puro"> Simples nacional puro</label>
+              <label class="checkbox-label"><input type="checkbox" name="regime_tributario" value="Simples nacional híbrido"> Simples nacional híbrido</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="field-label">Tabelas e anexo <span class="required-badge">*</span></label>
+            <div class="checkbox-group">
+              <label class="checkbox-label"><input type="checkbox" name="tabela_apuracao_anexo" value="III"> III</label>
+              <label class="checkbox-label"><input type="checkbox" name="tabela_apuracao_anexo" value="IV"> IV</label>
+              <label class="checkbox-label"><input type="checkbox" name="tabela_apuracao_anexo" value="V"> V</label>
+              <label class="checkbox-label"><input type="checkbox" name="tabela_apuracao_anexo" value="V com Fator R"> V com Fator R</label>
+              <label class="checkbox-label"><input type="checkbox" name="tabela_apuracao_anexo" value="Lucro Presumido"> Lucro Presumido</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="field-label" for="pontos_atencao_tecnicos">Pontos de atenção técnicos / premissas da análise <span class="required-badge">*</span></label>
+            <textarea id="pontos_atencao_tecnicos" name="pontos_atencao_tecnicos" class="form-control" placeholder="Detalhes técnicos, premissas de faturamento, fator R, pendências fiscais..."></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- 03 O QUE PRECISA SER FEITO | Comercial + Técnico -->
+      <section class="form-section">
+        <div class="section-header">03 O QUE PRECISA SER FEITO | Comercial + Técnico</div>
+        <div class="section-body">
+          <div class="form-group">
+            <label class="field-label">Frentes acionadas <span class="required-badge">*</span></label>
+            <div class="checkbox-group">
+              <label class="checkbox-label"><input type="checkbox" name="frentes_acionadas" value="Legalização"> Legalização</label>
+              <label class="checkbox-label"><input type="checkbox" name="frentes_acionadas" value="Fiscal"> Fiscal</label>
+              <label class="checkbox-label"><input type="checkbox" name="frentes_acionadas" value="Contábil"> Contábil</label>
+              <label class="checkbox-label"><input type="checkbox" name="frentes_acionadas" value="DP/RH"> DP/RH</label>
+              <label class="checkbox-label"><input type="checkbox" name="frentes_acionadas" value="Financeiro"> Financeiro</label>
+              <label class="checkbox-label"><input type="checkbox" name="frentes_acionadas" value="Outras"> Outras</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="field-label" for="demandas_acordadas">Demandas acordadas, pendências e entregáveis para o onboarding <span class="required-badge">*</span></label>
+            <textarea id="demandas_acordadas" name="demandas_acordadas" class="form-control" placeholder="Lista de entregáveis, escopo combinado e passos operacionais..."></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="field-label" for="documentos_pendentes">Descrição de documentos anexados <span class="required-badge">*</span></label>
+            <textarea id="documentos_pendentes" name="documentos_pendentes" class="form-control" placeholder="Ex: Certificado digital A1, procuração RFB, extratos bancários..."></textarea>
+          </div>
+
+          <!-- Upload de Documentos -->
+          <div class="form-group" style="background: var(--pj-offwhite); border: 1px dashed var(--slate-300); border-radius: var(--radius-control); padding: 18px; margin-top: 4px;">
+            <label class="field-label">
+              <span>Anexar Documentos, Imagens ou Vídeos de até 10 segundos <span class="optional-hint">(opcional)</span></span>
+            </label>
+            <p style="font-size: 0.85rem; color: var(--slate-500); margin-bottom: 12px;">
+              Anexe contratos, imagens ou vídeos explicativos. Cada arquivo registrará a data do seu aparelho.
+            </p>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <input type="file" id="file-upload-input" accept="image/*,video/*,application/pdf" style="display: none;">
+              <button type="button" id="btn-trigger-upload" class="btn btn-secondary" style="width: auto; padding: 8px 18px; font-size: 0.9rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                Selecionar Arquivo
+              </button>
+              <span id="upload-spinner" style="display: none; font-size: 0.85rem; color: var(--pj-blue-dark); font-weight: 500;">
+                Processando anexo...
+              </span>
+            </div>
+            <div id="attachments-container" style="display: flex; flex-direction: column; gap: 10px; margin-top: 14px;"></div>
+          </div>
+
+          <div class="form-group">
+            <label class="field-label" for="prazo_combinado">Prazo combinado com o cliente <span class="required-badge">*</span></label>
+            <input type="text" id="prazo_combinado" name="prazo_combinado" class="form-control" placeholder="Ex: 5 dias úteis, 15/10/2026, até fechamento do mês...">
+          </div>
+        </div>
+      </section>
+
+      <!-- 04 VALIDAÇÃO DO REPASSE -->
+      <section class="form-section">
+        <div class="section-header">04 VALIDAÇÃO DO REPASSE</div>
+        <div class="section-body">
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label class="field-label" for="responsavel_onboarding">Responsável pelo onboarding <span class="required-badge">*</span></label>
+              <input type="text" id="responsavel_onboarding" name="responsavel_onboarding" class="form-control" placeholder="Nome do responsável">
+            </div>
+
+            <div class="form-group">
+              <label class="field-label" for="responsavel_tecnico">Responsável técnico <span class="required-badge">*</span></label>
+              <input type="text" id="responsavel_tecnico" name="responsavel_tecnico" class="form-control" placeholder="Nome do especialista técnico">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="field-label">Status <span class="required-badge">*</span></label>
+            <div class="checkbox-group">
+              <label class="checkbox-label"><input type="checkbox" name="status_repasse" value="Completo para entrada"> Completo para entrada</label>
+              <label class="checkbox-label"><input type="checkbox" name="status_repasse" value="Pendente de informações"> Pendente de informações</label>
+              <label class="checkbox-label"><input type="checkbox" name="status_repasse" value="Exige alinhamento"> Exige alinhamento</label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="field-label" for="proxima_acao_resp_data">Próxima ação / responsável / data <span class="required-badge">*</span></label>
+            <textarea id="proxima_acao_resp_data" name="proxima_acao_resp_data" class="form-control" placeholder="Descreva a próxima ação imediata, o responsável e o prazo..."></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- Regra de Passagem -->
+      <div class="rule-banner">
+        <strong>Regra de passagem:</strong> o onboarding confirma o recebimento e devolve dúvidas ao comercial antes de iniciar a execução.
+      </div>
+
+      <!-- Barra de Ações Fixa -->
+      <div class="action-bar">
+        <div class="action-status-text" id="save-status-text">
+          Preencha os campos e salve quando desejar
+        </div>
+        <div class="action-buttons">
+          <button type="button" id="btn-download-pdf-direct" class="btn btn-pdf" style="display: none;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Baixar PDF
+          </button>
+          <button type="button" id="btn-save-draft" class="btn btn-secondary">
+            Salvar rascunho
+          </button>
+          <button type="button" id="btn-submit-form" class="btn btn-primary">
+            Enviar formulário
+          </button>
+        </div>
+      </div>
+    </form>
+
+    <!-- Modal de Compartilhamento -->
+    <div class="modal-overlay" id="share-modal" style="display: none;">
+      <div class="modal-content">
+        <h2 class="modal-title">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0047B9" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+          Tudo certo! Recebemos suas informações.
+        </h2>
+        <p class="modal-desc">
+          O registro foi gravado com segurança. Utilize os links abaixo para compartilhar ou consultar em qualquer aparelho.
+        </p>
+
+        <!-- Botão de Compartilhar Direto no Celular / WhatsApp -->
+        <button type="button" id="btn-native-share" class="btn btn-secondary" style="width: 100%; display: none; margin-bottom: 12px; font-weight: 600;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+          Compartilhar no Celular / WhatsApp
+        </button>
+
+        <div class="token-box">
+          <div class="token-label">1. Link de Consulta (Somente Leitura)</div>
+          <div class="token-input-row">
+            <input type="text" id="modal-view-url" class="token-input" readonly>
+            <button type="button" id="btn-copy-view" class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('modal-view-url').value); alert('Link copiado!');">Copiar</button>
+          </div>
+        </div>
+
+        <div class="token-box">
+          <div class="token-label">2. Link de Edição (Complementação)</div>
+          <div class="token-input-row">
+            <input type="text" id="modal-edit-url" class="token-input" readonly>
+            <button type="button" id="btn-copy-edit" class="btn btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('modal-edit-url').value); alert('Link copiado!');">Copiar</button>
+          </div>
+        </div>
+
+        <div style="background-color: var(--pj-beige); border-left: 4px solid var(--pj-yellow); border-radius: 12px; padding: 14px; margin: 14px 0;">
+          <div style="font-weight: 700; color: var(--pj-blue-dark); font-size: 0.95rem; margin-bottom: 4px;">
+            Dossiê de Anexos & Comprovante
+          </div>
+          <p style="font-size: 0.85rem; color: var(--pj-gray-dark); margin-bottom: 10px;">
+            Acesse a página com todos os documentos e carimbos de data do computador/celular.
+          </p>
+          <a id="modal-doc-url" href="#" class="btn btn-primary" style="width: 100%; font-size: 0.92rem;">
+            Ver Comprovante e Anexos
+          </a>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap;">
+          <button type="button" id="modal-pdf-download" class="btn btn-pdf" style="flex: 1;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Baixar PDF Preenchido
+          </button>
+          <button type="button" id="modal-close-btn" class="btn btn-secondary" style="flex: 1;">
+            Fechar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="app-toast" class="toast"></div>
+
+  <!-- Standalone Universal App Script -->
+  <script src="static/js/universal-app.js"></script>
+</body>
+</html>

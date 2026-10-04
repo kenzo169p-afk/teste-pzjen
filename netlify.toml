@@ -1,0 +1,22 @@
+[build]
+  publish = "."
+
+[[redirects]]
+  from = "/view/*"
+  to = "/index.html?view=:splat"
+  status = 200
+
+[[redirects]]
+  from = "/edit/*"
+  to = "/index.html?edit=:splat"
+  status = 200
+
+[[redirects]]
+  from = "/documento/*"
+  to = "/index.html?doc=:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

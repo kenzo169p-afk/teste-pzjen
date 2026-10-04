@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "pjzen-handoff",
+  "routes": [
+    { "src": "/view/(.*)", "dest": "/index.html?view=$1" },
+    { "src": "/edit/(.*)", "dest": "/index.html?edit=$1" },
+    { "src": "/documento/(.*)", "dest": "/index.html?doc=$1" },
+    { "src": "/(.*)", "dest": "/$1" }
+  ]
+}

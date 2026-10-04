@@ -34,6 +34,11 @@
           E-mail: {{ sub.email_preenchedor }}
         </div>
       {% endif %}
+      {% if sub.data_venda %}
+        <div style="font-size: 0.85rem; color: var(--slate-500); margin-top: 2px;">
+          Data da venda: {{ sub.data_venda }}
+        </div>
+      {% endif %}
     </div>
     <div>
       <div class="view-label">Data do registro / envio</div>
@@ -143,6 +148,13 @@
       </div>
     </div>
 
+    <div class="view-field-row">
+      <div class="view-label">Atividades secundárias</div>
+      <div class="view-val {% if not sub.atividades_secundarias %}empty{% endif %}">
+        {{ sub.atividades_secundarias or 'Não informado' }}
+      </div>
+    </div>
+
   </div>
 </section>
 
@@ -166,11 +178,12 @@
     </div>
 
     <div class="view-field-row">
-      <div class="view-label">Simples Nacional</div>
+      <div class="view-label">Regime tributário</div>
       <div class="view-val">
-        {% set opts = ['Puro', 'Híbrido', 'Não aplicável', 'Em análise'] %}
+        {% set sel_regime = sub.regime_tributario if (sub and sub.regime_tributario) else (sub.simples_nacional if sub else []) %}
+        {% set opts = ['Lucro presumido', 'Simples nacional puro', 'Simples nacional híbrido'] %}
         {% for opt in opts %}
-          {% if opt in sub.simples_nacional %}
+          {% if opt in sel_regime or (opt == 'Simples nacional puro' and 'Puro' in sel_regime) or (opt == 'Simples nacional híbrido' and 'Híbrido' in sel_regime) %}
             <span class="view-tag"><b>[X]</b> {{ opt }}</span>
           {% else %}
             <span class="view-tag-off">[ ] {{ opt }}</span>
@@ -180,23 +193,16 @@
     </div>
 
     <div class="view-field-row">
-      <div class="view-label">Tabela de apuração / Anexo</div>
+      <div class="view-label">Tabelas e anexo</div>
       <div class="view-val">
-        {% set opts = ['III', 'IV', 'V', 'I', 'II', 'A confirmar'] %}
+        {% set opts = ['III', 'IV', 'V', 'V com Fator R', 'Lucro Presumido'] %}
         {% for opt in opts %}
-          {% if opt in sub.tabela_apuracao_anexo %}
+          {% if opt in sub.tabela_apuracao_anexo or (opt == 'Lucro Presumido' and 'Lucro presumido' in sub.tabela_apuracao_anexo) %}
             <span class="view-tag"><b>[X]</b> {{ opt }}</span>
           {% else %}
             <span class="view-tag-off">[ ] {{ opt }}</span>
           {% endif %}
         {% endfor %}
-      </div>
-    </div>
-
-    <div class="view-field-row">
-      <div class="view-label">Regime tributário e enquadramento validados por</div>
-      <div class="view-val {% if not sub.regime_validado_por %}empty{% endif %}">
-        {{ sub.regime_validado_por or 'Não informado' }}
       </div>
     </div>
 
@@ -237,9 +243,9 @@
     </div>
 
     <div class="view-field-row">
-      <div class="view-label">Documentos / acessos pendentes</div>
+      <div class="view-label">Descrição de documentos anexados</div>
       <div class="view-val {% if not sub.documentos_pendentes %}empty{% endif %}">
-        {{ sub.documentos_pendentes or 'Nenhum documento pendente' }}
+        {{ sub.documentos_pendentes or 'Nenhum documento informado' }}
       </div>
     </div>
 
@@ -340,7 +346,7 @@
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
       Ver Dossiê de Anexos
     </a>
-    <a href="/pdf/{{ sub.view_token }}" class="btn btn-pdf" target="_blank">
+    <a href="/pdf/{{ sub.view_token }}" class="btn btn-pdf" target="_blank" onclick="if(window.html2pdf){window.gerarPdfCliente('Handoff-{{ sub.cliente_razao_social or 'PJzen' }}.pdf'); return false;}">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
       Baixar PDF preenchido
     </a>

@@ -62,6 +62,7 @@ class TestPJzenHandoff(unittest.TestCase):
             "plano_contratado": [],
             "faturamento_mensal_esperado": [],
             "atividade_cnae_municipio": "",
+            "atividades_secundarias": "",
             "tera_pro_labore": [],
             "simples_nacional": [],
             "tabela_apuracao_anexo": [],
@@ -120,7 +121,7 @@ class TestPJzenHandoff(unittest.TestCase):
 
         # Campo adicional de nome e aviso
         self.assertIn("Nome de quem está preenchendo", html_content)
-        self.assertIn("Apenas seu nome é obrigatório. As demais informações podem ser preenchidas depois.", html_content)
+        self.assertIn("Todos os itens do formulário são de preenchimento obrigatório para envio.", html_content)
 
         # Regra de passagem
         plain_text = re.sub(r'<[^>]+>', ' ', html_content)
@@ -129,9 +130,10 @@ class TestPJzenHandoff(unittest.TestCase):
 
         # 21 campos originais
         campos_esperados = [
-            "cliente_razao_social", "cnpj", "data_repasse",
+            "data_venda", "cliente_razao_social", "cnpj", "data_repasse",
             "tipo_demanda", "plano_contratado", "faturamento_mensal_esperado", "atividade_cnae_municipio",
-            "tera_pro_labore", "simples_nacional", "tabela_apuracao_anexo", "regime_validado_por", "pontos_atencao_tecnicos",
+            "atividades_secundarias",
+            "tera_pro_labore", "regime_tributario", "tabela_apuracao_anexo", "pontos_atencao_tecnicos",
             "frentes_acionadas", "demandas_acordadas", "documentos_pendentes", "prazo_combinado",
             "responsavel_onboarding", "responsavel_tecnico", "status_repasse", "proxima_acao_resp_data"
         ]
@@ -148,10 +150,10 @@ class TestPJzenHandoff(unittest.TestCase):
             "R$ 0 a R$ 25 mil", "R$ 25.000,01 a R$ 50 mil", "R$ 50.000,01 a R$ 200 mil",
             # 4. Pró-labore
             "Sim", "Não", "A definir",
-            # 5. Simples Nacional
-            "Puro", "Híbrido", "Não aplicável", "Em análise",
-            # 6. Tabela / Anexo
-            "III", "IV", "V", "I", "II", "A confirmar",
+            # 5. Regime tributário
+            "Lucro presumido", "Simples nacional puro", "Simples nacional híbrido",
+            # 6. Tabelas e anexo
+            "III", "IV", "V", "V com Fator R", "Lucro Presumido",
             # 7. Frentes acionadas
             "Legalização", "Fiscal", "Contábil", "DP/RH", "Financeiro", "Outras",
             # 8. Status repasse
@@ -413,6 +415,139 @@ class TestPJzenHandoff(unittest.TestCase):
         pdf_res = self.client.get(f"/pdf/{view_token}")
         self.assertEqual(pdf_res.status_code, 200)
         self.assertEqual(pdf_res.mimetype, "application/pdf")
+        self.assertGreater(len(pdf_res.data), 1000)
+
+    # 16. Campo de atividades secundárias: persistência, consulta e PDF
+    def test_16_atividades_secundarias(self):
+        payload = {
+            "nome_preenchedor": "Beatriz Lima",
+            "cliente_razao_social": "Lima Tech Ltda",
+            "atividade_cnae_municipio": "Desenvolvimento de sistemas (6201-5/01)",
+            "atividades_secundarias": "Consultoria em TI (6202-3/00) e Treinamento (8599-6/04)"
+        }
+        res = self.client.post("/api/submit", json=payload)
+        self.assertEqual(res.status_code, 201)
+        data = res.get_json()
+        view_token = data["view_token"]
+
+        # Verifica API get
+        get_res = self.client.get(f"/api/get/{view_token}")
+        self.assertEqual(get_res.status_code, 200)
+        rec = get_res.get_json()["data"]
+        self.assertEqual(rec["atividades_secundarias"], "Consultoria em TI (6202-3/00) e Treinamento (8599-6/04)")
+
+        # Verifica na página de visualização HTML
+        v_res = self.client.get(f"/view/{view_token}")
+        self.assertEqual(v_res.status_code, 200)
+        v_html = v_res.get_data(as_text=True)
+        self.assertIn("Atividades secundárias", v_html)
+        self.assertIn("Consultoria em TI (6202-3/00) e Treinamento (8599-6/04)", v_html)
+
+        # Verifica PDF
+        pdf_res = self.client.get(f"/pdf/{view_token}")
+        self.assertEqual(pdf_res.status_code, 200)
+        self.assertGreater(len(pdf_res.data), 1000)
+
+    # 17. Regime tributário com opções Lucro presumido, Simples nacional puro, Simples nacional híbrido
+    def test_17_regime_tributario(self):
+        payload = {
+            "nome_preenchedor": "Fernando Costa",
+            "cliente_razao_social": "Costa Contabilidade",
+            "regime_tributario": ["Lucro presumido", "Simples nacional híbrido"]
+        }
+        res = self.client.post("/api/submit", json=payload)
+        self.assertEqual(res.status_code, 201)
+        data = res.get_json()
+        view_token = data["view_token"]
+
+        # Verifica API get
+        get_res = self.client.get(f"/api/get/{view_token}")
+        self.assertEqual(get_res.status_code, 200)
+        rec = get_res.get_json()["data"]
+        self.assertEqual(rec["regime_tributario"], ["Lucro presumido", "Simples nacional híbrido"])
+
+        # Verifica na página de visualização HTML
+        v_res = self.client.get(f"/view/{view_token}")
+        self.assertEqual(v_res.status_code, 200)
+        v_html = v_res.get_data(as_text=True)
+        self.assertIn("Regime tributário", v_html)
+        self.assertIn("<b>[X]</b> Lucro presumido", v_html)
+        self.assertIn("<b>[X]</b> Simples nacional híbrido", v_html)
+        self.assertIn("[ ] Simples nacional puro", v_html)
+
+        # Verifica PDF
+        pdf_res = self.client.get(f"/pdf/{view_token}")
+        self.assertEqual(pdf_res.status_code, 200)
+        self.assertGreater(len(pdf_res.data), 1000)
+
+    # 18. Tabelas e anexo com novas opções: III, IV, V, V com Fator R, Lucro Presumido
+    def test_18_tabelas_e_anexo(self):
+        payload = {
+            "nome_preenchedor": "Gabriel Rocha",
+            "cliente_razao_social": "Rocha Tecnologia",
+            "tabela_apuracao_anexo": ["V com Fator R", "Lucro Presumido"]
+        }
+        res = self.client.post("/api/submit", json=payload)
+        self.assertEqual(res.status_code, 201)
+        data = res.get_json()
+        view_token = data["view_token"]
+
+        # Verifica API get
+        get_res = self.client.get(f"/api/get/{view_token}")
+        self.assertEqual(get_res.status_code, 200)
+        rec = get_res.get_json()["data"]
+        self.assertEqual(rec["tabela_apuracao_anexo"], ["V com Fator R", "Lucro Presumido"])
+
+        # Verifica na página de visualização HTML
+        v_res = self.client.get(f"/view/{view_token}")
+        self.assertEqual(v_res.status_code, 200)
+        v_html = v_res.get_data(as_text=True)
+        self.assertIn("Tabelas e anexo", v_html)
+        self.assertIn("<b>[X]</b> V com Fator R", v_html)
+        self.assertIn("<b>[X]</b> Lucro Presumido", v_html)
+        self.assertIn("[ ] III", v_html)
+        self.assertIn("[ ] IV", v_html)
+        self.assertIn("[ ] V", v_html)
+
+        # Verifica PDF
+        pdf_res = self.client.get(f"/pdf/{view_token}")
+        self.assertEqual(pdf_res.status_code, 200)
+        self.assertGreater(len(pdf_res.data), 1000)
+
+    # 19. Campo data_venda no início do formulário
+    def test_19_data_venda(self):
+        payload = {
+            "nome_preenchedor": "Larissa Meireles",
+            "email_preenchedor": "larissa@pjzen.com.br",
+            "data_venda": "2026-10-04",
+            "cliente_razao_social": "Meireles Software Ltda"
+        }
+        res = self.client.post("/api/submit", json=payload)
+        self.assertEqual(res.status_code, 201)
+        data = res.get_json()
+        view_token = data["view_token"]
+
+        # Verifica API get
+        get_res = self.client.get(f"/api/get/{view_token}")
+        self.assertEqual(get_res.status_code, 200)
+        rec = get_res.get_json()["data"]
+        self.assertEqual(rec["data_venda"], "2026-10-04")
+
+        # Verifica visualização HTML
+        v_res = self.client.get(f"/view/{view_token}")
+        self.assertEqual(v_res.status_code, 200)
+        v_html = v_res.get_data(as_text=True)
+        self.assertIn("Data da venda: 2026-10-04", v_html)
+
+        # Verifica dossiê / documento HTML
+        doc_res = self.client.get(f"/documento/{view_token}")
+        self.assertEqual(doc_res.status_code, 200)
+        doc_html = doc_res.get_data(as_text=True)
+        self.assertIn("Data da venda: 2026-10-04", doc_html)
+
+        # Verifica PDF
+        pdf_res = self.client.get(f"/pdf/{view_token}")
+        self.assertEqual(pdf_res.status_code, 200)
         self.assertGreater(len(pdf_res.data), 1000)
 
 if __name__ == "__main__":
