@@ -1,16 +1,53 @@
-# PJzen Apache / LiteSpeed Rewrite Rules
+# ==============================================================================
+# PJzen | Sistema de Defesa e Segurança (.htaccess)
+# ==============================================================================
+
+# 1. BLOQUEIO ESTRITO CONTRA VAZAMENTO DE ARQUIVOS SENSÍVEIS DO BANCO E CONFIGURAÇÃO
+# Impede que qualquer pessoa baixe o banco SQLite, .env, scripts Python ou backups
+<FilesMatch "(\.env|\.db|\.sqlite|\.sql|\.log|\.json|\.bat|\.py|\.md|Procfile|requirements\.txt)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# 2. DESATIVAR LISTAGEM DE DIRETÓRIOS (Ninguém pode ver a lista de arquivos das pastas)
+Options -Indexes
+
+# 3. CABEÇALHOS DE SEGURANÇA E PROTEÇÃO DE PRIVACIDADE
+<IfModule mod_headers.c>
+    # Impede que sites maliciosos embutam o PJzen em iframes invisíveis (Anti-Clickjacking)
+    Header always set X-Frame-Options "SAMEORIGIN"
+    
+    # Impede que navegadores adivinhem tipos MIME incorretos (Anti-MIME-Sniffing)
+    Header always set X-Content-Type-Options "nosniff"
+    
+    # Ativa proteção contra Cross-Site Scripting nos navegadores
+    Header always set X-XSS-Protection "1; mode=block"
+    
+    # Impede que links externos recebam o token secreto de consulta no cabeçalho Referer
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    
+    # Impede que robôs de busca indexem páginas e vazem informações dos clientes no Google
+    Header always set X-Robots-Tag "noindex, nofollow, noarchive"
+</IfModule>
+
+# 4. REGRAS DE ROTEAMENTO
 RewriteEngine On
 RewriteBase /
 
-# Permitir arquivos e pastas existentes (static, uploads, index.html, etc.)
+# Permitir arquivos públicos existentes (CSS, JS, imagens públicas)
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# Redirecionar rotas de API para api.php se PHP estiver disponível
+# Redirecionar rotas de API para api.php
 RewriteRule ^api/(.*)$ api.php [QSA,L]
 
-# Redirecionar rotas view/edit/documento para index.php ou index.html
+# Redirecionar rotas amigáveis para index.php
 RewriteRule ^view/(.*)$ index.php?view=$1 [QSA,L]
 RewriteRule ^edit/(.*)$ index.php?edit=$1 [QSA,L]
 RewriteRule ^documento/(.*)$ index.php?doc=$1 [QSA,L]

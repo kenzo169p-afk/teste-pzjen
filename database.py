@@ -1,6 +1,7 @@
 import sqlite3
 import json
 import secrets
+import re
 from datetime import datetime
 from pathlib import Path
 from contextlib import contextmanager
@@ -332,7 +333,14 @@ def update_submission(edit_token, data, is_draft=False, expected_version=None, d
         "submitted_at": new_submitted_at
     }
 
+TOKEN_PATTERN = re.compile(r'^[a-zA-Z0-9_\-]{8,64}$')
+
+def _is_safe_token(token):
+    return bool(token and isinstance(token, str) and TOKEN_PATTERN.match(token))
+
 def get_by_view_token(view_token, db_path=None):
+    if not _is_safe_token(view_token):
+        return None
     with get_db(db_path) as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM submissions WHERE view_token = ?", (view_token,))
@@ -340,6 +348,8 @@ def get_by_view_token(view_token, db_path=None):
         return _row_to_dict(row)
 
 def get_by_edit_token(edit_token, db_path=None):
+    if not _is_safe_token(edit_token):
+        return None
     with get_db(db_path) as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM submissions WHERE edit_token = ?", (edit_token,))
@@ -348,6 +358,8 @@ def get_by_edit_token(edit_token, db_path=None):
 
 def get_by_any_token(token, db_path=None):
     """Finds submission by either edit_token or view_token."""
+    if not _is_safe_token(token):
+        return None
     with get_db(db_path) as conn:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM submissions WHERE view_token = ? OR edit_token = ?", (token, token))

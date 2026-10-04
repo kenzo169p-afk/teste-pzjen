@@ -8,8 +8,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="PJzen Handoff">
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}">
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/logo.png') }}">
   <link rel="manifest" href="/manifest.json">
+  <!-- Defesa e Privacidade: Não indexar no Google e proteger tokens de URL -->
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>{% block title %}PJzen | Handoff Comercial → Onboarding & Operação{% endblock %}</title>
 
   <!-- Google Fonts: Inter -->
@@ -27,6 +29,8 @@
     {% block content %}{% endblock %}
   </div>
   {% block scripts %}{% endblock %}
+  <!-- Rastreador de entrada e saída (Supabase ativo somente fora do localhost / na Hostinger) -->
+  <script src="{{ url_for('static', filename='js/access-tracker.js') }}"></script>
   <script>
     // Registro de Service Worker para PWA (celulares e offline)
     if ('serviceWorker' in navigator) {

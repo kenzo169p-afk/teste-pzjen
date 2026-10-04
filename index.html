@@ -8,8 +8,10 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="PJzen Handoff">
   <link rel="icon" type="image/png" href="static/img/logo.png">
-  <link rel="apple-touch-icon" href="static/img/logo.png">
   <link rel="manifest" href="manifest.json">
+  <!-- Defesa e Privacidade: Não indexar no Google e proteger tokens de URL -->
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>PJzen | Handoff Comercial → Onboarding & Operação</title>
 
   <!-- Google Fonts: Inter -->
@@ -362,6 +364,8 @@
   <!-- Toast Notification -->
   <div id="app-toast" class="toast"></div>
 
+  <!-- Rastreador de entrada e saída (Supabase ativo somente fora do localhost / na Hostinger) -->
+  <script src="static/js/access-tracker.js"></script>
   <!-- Standalone Universal App Script -->
   <script src="static/js/universal-app.js"></script>
 </body>

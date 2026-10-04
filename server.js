@@ -27,6 +27,10 @@ function saveData(data) {
   } catch (e) {}
 }
 
+function isSafeToken(token) {
+  return typeof token === 'string' && /^[a-zA-Z0-9_\-]{8,64}$/.test(token);
+}
+
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -45,6 +49,13 @@ const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
+  // Cabeçalhos de Defesa e Segurança Contra Vazamento de Dados
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
+
   if (req.method === 'OPTIONS') {
     res.writeHead(200);
     return res.end();
@@ -52,6 +63,33 @@ const server = http.createServer((req, res) => {
 
   const parsedUrl = new URL(req.url, `http://${req.headers.host}`);
   const pathname = parsedUrl.pathname;
+
+  // 0. API: /api/log-acesso (Entrada e Saída)
+  if (pathname === '/api/log-acesso' && req.method === 'POST') {
+    const host = (req.headers.host || '').toLowerCase();
+    const isLocalhost = (
+      host.includes('localhost') ||
+      host.includes('127.0.0.1') ||
+      host.endsWith('.local')
+    );
+
+    if (isLocalhost) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({
+        success: true,
+        ignored: true,
+        reason: 'Ambiente localhost ignorado. Logs no Supabase so sao gravados em producao/Hostinger.'
+      }));
+    }
+
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ success: true, logged: true }));
+    });
+    return;
+  }
 
   // 1. API: /api/submit ou /api/draft ou /api/edit
   if ((pathname === '/api/submit' || pathname === '/api/draft' || pathname.startsWith('/api/edit')) && req.method === 'POST') {
@@ -74,6 +112,10 @@ const server = http.createServer((req, res) => {
 
         if (pathname.startsWith('/api/edit/')) {
           editToken = pathname.replace('/api/edit/', '');
+          if (!isSafeToken(editToken)) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ success: false, error: 'Token inválido' }));
+          }
           const existing = data[editToken];
           if (existing) {
             viewToken = existing.view_token;
@@ -137,11 +179,19 @@ const server = http.createServer((req, res) => {
   // 2. API: /api/get/:token
   if (pathname.startsWith('/api/get/') && req.method === 'GET') {
     const token = pathname.replace('/api/get/', '');
+    if (!isSafeToken(token)) {
+      res.writeHead(400, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ success: false, error: 'Token inválido' }));
+    }
     const data = loadData();
     const record = data[token];
     if (record) {
+      const sanitized = { ...record };
+      if (token === record.view_token || !token.startsWith('edit_')) {
+        delete sanitized.edit_token;
+      }
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      return res.end(JSON.stringify({ success: true, data: record }));
+      return res.end(JSON.stringify({ success: true, data: sanitized }));
     }
     res.writeHead(404, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ success: false, error: 'Registro não encontrado' }));
@@ -164,12 +214,35 @@ const server = http.createServer((req, res) => {
     return res.end();
   }
 
-  // 4. Arquivos Estáticos
-  let filePath = path.join(__dirname, pathname === '/' ? 'index.html' : pathname);
-  const ext = path.extname(filePath).toLowerCase();
+  // 4. Arquivos Estáticos com Defesa Ativa Contra Vazamento de Dados
+  const cleanPath = path.posix.normalize(pathname).replace(/^(\.\.[\/\\])+/, '');
+  const blockedExtensions = ['.env', '.db', '.sqlite', '.sqlite3', '.sql', '.log', '.json', '.bat', '.py', '.md', '.sh', '.bak'];
+  const ext = path.extname(cleanPath).toLowerCase();
+
+  // Bloqueio de arquivos confidenciais e scripts
+  if (
+    blockedExtensions.includes(ext) ||
+    cleanPath.includes('.env') ||
+    (cleanPath.startsWith('/uploads/') && !['.pdf', '.png', '.jpg', '.jpeg', '.webp'].includes(ext))
+  ) {
+    res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+    return res.end('403 Proibido: Acesso negado a arquivo protegido.');
+  }
+
+  // Prevenção contra Directory Traversal
+  let safePath = path.resolve(__dirname, '.' + cleanPath);
+  if (!safePath.startsWith(path.resolve(__dirname))) {
+    res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+    return res.end('403 Proibido');
+  }
+
+  if (cleanPath === '/' || cleanPath === '') {
+    safePath = path.join(__dirname, 'index.html');
+  }
+
   const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
-  fs.readFile(filePath, (err, content) => {
+  fs.readFile(safePath, (err, content) => {
     if (err) {
       if (err.code === 'ENOENT') {
         // Fallback para index.html (SPA)

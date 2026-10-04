@@ -1,13 +1,44 @@
 import io
 import re
+from datetime import datetime
+import requests
 from flask import Flask, request, jsonify, render_template, send_file, send_from_directory, redirect, url_for, abort
 import database
 import pdf_generator
 import supabase_storage
 import email_service
 
+import time
+from collections import defaultdict
+
+TOKEN_SAFE_PATTERN = re.compile(r'^[a-zA-Z0-9_\-]{8,64}$')
+_failed_lookups = defaultdict(list)
+
+def is_safe_token(token: str) -> bool:
+    if not token or not isinstance(token, str):
+        return False
+    return bool(TOKEN_SAFE_PATTERN.match(token))
+
+def is_rate_limited(ip: str) -> bool:
+    now = time.time()
+    _failed_lookups[ip] = [t for t in _failed_lookups[ip] if now - t < 60]
+    return len(_failed_lookups[ip]) >= 30
+
+def record_failed_lookup(ip: str):
+    _failed_lookups[ip].append(time.time())
+
 app = Flask(__name__)
 database.init_db()
+
+@app.after_request
+def apply_security_headers(response):
+    """Aplica cabeçalhos de defesa para proteção de dados contra vazamentos."""
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
+    return response
 
 @app.route("/")
 def index():
@@ -17,8 +48,16 @@ def index():
 @app.route("/edit/<token>")
 def edit_view(token):
     """Página de edição/complementação acessível somente via edit_token."""
+    ip = request.remote_addr or "unknown"
+    if is_rate_limited(ip):
+        return render_template("error.html", title="Muitas tentativas", message="Limite de tentativas excedido. Aguarde 1 minuto."), 429
+    if not is_safe_token(token):
+        record_failed_lookup(ip)
+        return render_template("error.html", title="Link inválido", message="O link de edição acessado é inválido."), 400
+
     sub = database.get_by_edit_token(token)
     if not sub:
+        record_failed_lookup(ip)
         return render_template(
             "error.html", 
             title="Registro de edição não encontrado", 
@@ -29,8 +68,16 @@ def edit_view(token):
 @app.route("/view/<token>")
 def view_only(token):
     """Página de consulta em modo somente leitura acessível via view_token."""
+    ip = request.remote_addr or "unknown"
+    if is_rate_limited(ip):
+        return render_template("error.html", title="Muitas tentativas", message="Limite de tentativas excedido. Aguarde 1 minuto."), 429
+    if not is_safe_token(token):
+        record_failed_lookup(ip)
+        return render_template("error.html", title="Link inválido", message="O link de consulta informado é inválido."), 400
+
     sub = database.get_by_view_token(token)
     if not sub:
+        record_failed_lookup(ip)
         return render_template(
             "error.html", 
             title="Registro de consulta não encontrado", 
@@ -41,8 +88,16 @@ def view_only(token):
 @app.route("/documento/<token>")
 def view_documento(token):
     """Visualização do comprovante e lista cronológica de documentos com data do PC."""
+    ip = request.remote_addr or "unknown"
+    if is_rate_limited(ip):
+        return render_template("error.html", title="Muitas tentativas", message="Limite de tentativas excedido. Aguarde 1 minuto."), 429
+    if not is_safe_token(token):
+        record_failed_lookup(ip)
+        return render_template("error.html", title="Link inválido", message="O link para este comprovante é inválido."), 400
+
     sub = database.get_by_any_token(token)
     if not sub:
+        record_failed_lookup(ip)
         return render_template(
             "error.html", 
             title="Comprovante de documentos não encontrado", 
@@ -57,6 +112,86 @@ def serve_manifest():
 @app.route("/sw.js")
 def serve_sw():
     return send_from_directory(".", "sw.js", mimetype="application/javascript")
+
+@app.route("/api/log-acesso", methods=["POST"])
+def api_log_acesso():
+    """
+    Registra entrada e saída no Supabase com data, horário e IP do computador.
+    REGRA ESTRITA: Só registra quando estiver fora do localhost (ex: Hostinger ou produção).
+    Em localhost, ignora e retorna sucesso sem chamar o Supabase.
+    """
+    host = (request.host or "").lower()
+    remote_addr = request.remote_addr or ""
+    
+    is_localhost = (
+        "localhost" in host or
+        "127.0.0.1" in host or
+        remote_addr in ("127.0.0.1", "::1", "0.0.0.0") or
+        host.endswith(".local")
+    )
+    
+    if is_localhost:
+        return jsonify({
+            "success": True,
+            "ignored": True,
+            "reason": "Ambiente localhost ignorado. Logs no Supabase so sao gravados em producao/Hostinger."
+        }), 200
+
+    payload = request.get_json(silent=True) or {}
+    
+    # Obter IP real do visitante (inclusive atras de proxies Cloudflare/Hostinger)
+    client_ip = (
+        request.headers.get("CF-Connecting-IP") or
+        request.headers.get("X-Forwarded-For", "").split(",")[0].strip() or
+        request.headers.get("X-Real-IP") or
+        remote_addr
+    )
+    
+    supabase_url, supabase_key, _ = supabase_storage.get_supabase_config()
+    if not supabase_url or not supabase_key:
+        return jsonify({
+            "success": False,
+            "error": "Credenciais do Supabase nao configuradas no .env"
+        }), 200
+
+    tipo_evento = payload.get("tipo_evento", "entrada")
+    horario = payload.get("horario") or datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    pagina = payload.get("pagina", "/")
+    dispositivo = payload.get("dispositivo") or request.headers.get("User-Agent", "Desconhecido")
+    session_id = payload.get("session_id")
+    tempo_permanencia = payload.get("tempo_permanencia_segundos", 0)
+
+    supabase_payload = {
+        "tipo_evento": tipo_evento,
+        "horario": horario,
+        "ip": client_ip,
+        "pagina": pagina,
+        "dispositivo": dispositivo,
+        "session_id": session_id,
+        "tempo_permanencia_segundos": tempo_permanencia,
+        "host": host
+    }
+
+    try:
+        endpoint = f"{supabase_url}/rest/v1/acessos_logs"
+        headers = {
+            "apikey": supabase_key,
+            "Authorization": f"Bearer {supabase_key}",
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal"
+        }
+        resp = requests.post(endpoint, json=supabase_payload, headers=headers, timeout=5)
+        ok = resp.status_code in (200, 201)
+        return jsonify({
+            "success": ok,
+            "logged": ok,
+            "ip": client_ip,
+            "horario": horario,
+            "tipo_evento": tipo_evento,
+            "status_code": resp.status_code
+        }), (200 if ok else 500)
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route("/uploads/<path:filename>")
 def serve_upload(filename):
@@ -303,6 +438,13 @@ def api_configure_email():
 @app.route("/api/get/<token>", methods=["GET"])
 def api_get_record(token):
     """Consulta os dados do registro em formato JSON isolado."""
+    ip = request.remote_addr or "unknown"
+    if is_rate_limited(ip):
+        return jsonify({"success": False, "error": "Limite de tentativas excedido"}), 429
+    if not is_safe_token(token):
+        record_failed_lookup(ip)
+        return jsonify({"success": False, "error": "Token inválido"}), 400
+
     sub_view = database.get_by_view_token(token)
     if sub_view:
         sanitized_view = dict(sub_view)
@@ -313,13 +455,22 @@ def api_get_record(token):
     if sub_edit:
         return jsonify({"success": True, "permission": "edit", "data": sub_edit}), 200
 
+    record_failed_lookup(ip)
     return jsonify({"success": False, "error": "Registro não encontrado"}), 404
 
 @app.route("/pdf/<token>")
 def download_pdf(token):
     """Gera e retorna o PDF preenchido a partir do view_token ou edit_token."""
+    ip = request.remote_addr or "unknown"
+    if is_rate_limited(ip):
+        return render_template("error.html", title="Muitas tentativas", message="Limite de tentativas excedido. Aguarde 1 minuto."), 429
+    if not is_safe_token(token):
+        record_failed_lookup(ip)
+        return render_template("error.html", title="Link inválido", message="O token informado é inválido."), 400
+
     sub = database.get_by_any_token(token)
     if not sub:
+        record_failed_lookup(ip)
         return render_template(
             "error.html", 
             title="PDF não encontrado", 

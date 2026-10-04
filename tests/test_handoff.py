@@ -550,5 +550,89 @@ class TestPJzenHandoff(unittest.TestCase):
         self.assertEqual(pdf_res.status_code, 200)
         self.assertGreater(len(pdf_res.data), 1000)
 
+    # 20. Registro de Acessos: em localhost NÃO deve registrar no Supabase
+    def test_20_log_acesso_ignorado_em_localhost(self):
+        # Chamada de entrada em localhost
+        res_entrada = self.client.post("/api/log-acesso", json={
+            "tipo_evento": "entrada",
+            "session_id": "test_sess_123",
+            "pagina": "/"
+        })
+        self.assertEqual(res_entrada.status_code, 200)
+        data_entrada = res_entrada.get_json()
+        self.assertTrue(data_entrada["success"])
+        self.assertTrue(data_entrada["ignored"])
+        self.assertIn("localhost", data_entrada["reason"].lower())
+
+        # Chamada de saída em localhost
+        res_saida = self.client.post("/api/log-acesso", json={
+            "tipo_evento": "saida",
+            "session_id": "test_sess_123",
+            "pagina": "/",
+            "tempo_permanencia_segundos": 45
+        })
+        self.assertEqual(res_saida.status_code, 200)
+        data_saida = res_saida.get_json()
+        self.assertTrue(data_saida["success"])
+        self.assertTrue(data_saida["ignored"])
+
+    # 21. Sistema de Defesa: Cabeçalhos HTTP de segurança e anti-indexação
+    def test_21_cabecalhos_seguranca_anti_vazamento(self):
+        res = self.client.get("/")
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.headers.get("X-Frame-Options"), "SAMEORIGIN")
+        self.assertEqual(res.headers.get("X-Content-Type-Options"), "nosniff")
+        self.assertEqual(res.headers.get("Referrer-Policy"), "strict-origin-when-cross-origin")
+        self.assertEqual(res.headers.get("X-Robots-Tag"), "noindex, nofollow, noarchive")
+        self.assertEqual(res.headers.get("X-XSS-Protection"), "1; mode=block")
+
+    # 22. Sistema de Defesa: Rejeição de tokens inválidos e tentativas de injeção
+    def test_22_rejeicao_tokens_invalidos(self):
+        tokens_invalidos_400 = [
+            "token'OR'1'='1",
+            "short",
+            "a" * 100,
+            "token with spaces",
+            "token$special!#*",
+            "token<script>"
+        ]
+        for token in tokens_invalidos_400:
+            res_get = self.client.get(f"/api/get/{token}")
+            self.assertEqual(res_get.status_code, 400, f"Token malicioso {token} não foi rejeitado com 400")
+
+            res_view = self.client.get(f"/view/{token}")
+            self.assertEqual(res_view.status_code, 400, f"View com token malicioso {token} não foi rejeitada com 400")
+
+        # Tentativas de directory traversal são barradas com 400 ou 404
+        for token_traversal in ["../etc/passwd", "..\\windows\\system32"]:
+            res_trav = self.client.get(f"/api/get/{token_traversal}")
+            self.assertIn(res_trav.status_code, [400, 404])
+
+    # 23. Sistema de Defesa: Consulta via view_token NUNCA vaza o edit_token
+    def test_23_view_token_nao_vaza_edit_token(self):
+        res = self.client.post("/api/submit", json={
+            "nome_preenchedor": "Segurança Teste",
+            "cliente_razao_social": "Cliente Confidencial Ltda"
+        })
+        self.assertEqual(res.status_code, 201)
+        data = res.get_json()
+        view_token = data["view_token"]
+        edit_token = data["edit_token"]
+
+        # Consulta via view_token pela API
+        get_view = self.client.get(f"/api/get/{view_token}")
+        self.assertEqual(get_view.status_code, 200)
+        view_payload = get_view.get_json()["data"]
+
+        # edit_token DEVE ser omitido na resposta para evitar sequestro de permissão de edição
+        self.assertNotIn("edit_token", view_payload, "Vazamento crítico: edit_token foi retornado via view_token!")
+        self.assertEqual(view_payload["view_token"], view_token)
+
+        # Consulta via edit_token legítimo mantém as permissões
+        get_edit = self.client.get(f"/api/get/{edit_token}")
+        self.assertEqual(get_edit.status_code, 200)
+        edit_payload = get_edit.get_json()["data"]
+        self.assertEqual(edit_payload.get("edit_token"), edit_token)
+
 if __name__ == "__main__":
     unittest.main()

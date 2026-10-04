@@ -107,3 +107,25 @@ Se você quiser apenas abrir o formulário no seu computador sem servidor:
 | **Vercel / Netlify / Cloudflare** | 100% | 1-Click deploy gratuito via `vercel.json` e `netlify.toml` |
 | **Node.js / Docker** | 100% | `server.js` nativo ou `docker compose up -d` |
 | **Python / Flask (Local)** | 100% | `app.py` original preservado e testado |
+
+---
+
+## 📊 3. Registro de Entrada e Saída no Supabase (Hostinger Ativa vs Localhost)
+
+O sistema conta com um **rastreador inteligente** de tráfego que grava no Supabase as entradas e saídas de visitantes no site com data, horário e IP real.
+
+### Regra de Proteção:
+- **Quando ativo na Hostinger (produção):** Grava automaticamente o IP do visitante, horário exato, página, aparelho e tempo de permanência no Supabase.
+- **Quando em Localhost (desenvolvimento/testes):** O rastreador detecta o IP local/localhost e **bloqueia o envio**, não poluindo o seu banco do Supabase.
+
+### Como Ativar no Supabase:
+1. Abra o painel do seu projeto no [Supabase](https://supabase.com).
+2. Clique em **SQL Editor** no menu lateral esquerdo.
+3. Abra ou copie o conteúdo do arquivo `supabase_acessos.sql` deste projeto e clique em **Run**.
+4. No arquivo `.env` da sua Hostinger, certifique-se de preencher:
+   ```env
+   SUPABASE_URL=https://seu-projeto.supabase.co
+   SUPABASE_KEY=sua-chave-anon-ou-service-role
+   ```
+5. Pronto! Toda vez que alguém entrar ou sair do site na Hostinger, uma linha com `tipo_evento: entrada` e `tipo_evento: saida`, o IP e o horário será registrada na tabela `acessos_logs`.
+

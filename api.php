@@ -10,6 +10,13 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
+// Cabeçalhos de Defesa e Segurança Contra Vazamento de Dados
+header('X-Frame-Options: SAMEORIGIN');
+header('X-Content-Type-Options: nosniff');
+header('X-XSS-Protection: 1; mode=block');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header('X-Robots-Tag: noindex, nofollow, noarchive');
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
@@ -75,8 +82,133 @@ function generateToken($length = 24) {
     return bin2hex(random_bytes($length / 2));
 }
 
+function getEnvConfig($key, $default = '') {
+    static $env = null;
+    if ($env === null) {
+        $env = [];
+        $envFile = __DIR__ . '/.env';
+        if (file_exists($envFile)) {
+            $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if ($line && $line[0] !== '#' && strpos($line, '=') !== false) {
+                    list($k, $v) = explode('=', $line, 2);
+                    $env[trim($k)] = trim(trim($v), "'\"");
+                }
+            }
+        }
+    }
+    return getenv($key) ?: ($env[$key] ?? $default);
+}
+
+function isLocalhost() {
+    $host = strtolower($_SERVER['HTTP_HOST'] ?? '');
+    $remote = $_SERVER['REMOTE_ADDR'] ?? '';
+    if (
+        strpos($host, 'localhost') !== false ||
+        strpos($host, '127.0.0.1') !== false ||
+        strpos($host, '::1') !== false ||
+        $remote === '127.0.0.1' ||
+        $remote === '::1' ||
+        (strlen($host) > 6 && substr($host, -6) === '.local')
+    ) {
+        return true;
+    }
+    return false;
+}
+
+function getClientIp() {
+    if (!empty($_SERVER['HTTP_CF_CONNECTING_IP'])) {
+        return $_SERVER['HTTP_CF_CONNECTING_IP'];
+    }
+    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+        $ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
+        return trim($ips[0]);
+    }
+    if (!empty($_SERVER['HTTP_X_REAL_IP'])) {
+        return $_SERVER['HTTP_X_REAL_IP'];
+    }
+    return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+}
+
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 $method = $_SERVER['REQUEST_METHOD'];
+
+// Rota de Log de Acessos no Supabase (Entrada e Saída)
+if (strpos($uri, '/api/log-acesso') !== false && $method === 'POST') {
+    // REGRA ESTRITA: Se for Localhost, ignora e NÃO grava no Supabase
+    if (isLocalhost()) {
+        echo json_encode([
+            'success' => true,
+            'ignored' => true,
+            'reason' => 'Ambiente localhost ignorado. Logs no Supabase só são gravados em produção/Hostinger.'
+        ]);
+        exit;
+    }
+
+    $raw = file_get_contents('php://input');
+    $data = json_decode($raw, true) ?: $_POST;
+
+    $supabaseUrl = rtrim(getEnvConfig('SUPABASE_URL'), '/');
+    $supabaseKey = getEnvConfig('SUPABASE_KEY');
+
+    if (empty($supabaseUrl) || empty($supabaseKey)) {
+        echo json_encode([
+            'success' => false,
+            'error' => 'Chaves do Supabase não configuradas no arquivo .env'
+        ]);
+        exit;
+    }
+
+    $ip = getClientIp();
+    $tipoEvento = $data['tipo_evento'] ?? 'entrada';
+    $horario = $data['horario'] ?? date('d/m/Y H:i:s');
+    $pagina = $data['pagina'] ?? '/';
+    $dispositivo = $data['dispositivo'] ?? ($_SERVER['HTTP_USER_AGENT'] ?? 'Desconhecido');
+    $sessionId = $data['session_id'] ?? null;
+    $tempoPermanencia = isset($data['tempo_permanencia_segundos']) ? (int)$data['tempo_permanencia_segundos'] : 0;
+    $host = $_SERVER['HTTP_HOST'] ?? 'hostinger';
+
+    $payload = [
+        'tipo_evento' => $tipoEvento,
+        'horario' => $horario,
+        'ip' => $ip,
+        'pagina' => $pagina,
+        'dispositivo' => $dispositivo,
+        'session_id' => $sessionId,
+        'tempo_permanencia_segundos' => $tempoPermanencia,
+        'host' => $host
+    ];
+
+    $endpoint = $supabaseUrl . '/rest/v1/acessos_logs';
+
+    $ch = curl_init($endpoint);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Content-Type: application/json',
+        'apikey: ' . $supabaseKey,
+        'Authorization: Bearer ' . $supabaseKey,
+        'Prefer: return=minimal'
+    ]);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    $ok = ($httpCode >= 200 && $httpCode < 300);
+
+    echo json_encode([
+        'success' => $ok,
+        'logged' => $ok,
+        'ip' => $ip,
+        'horario' => $horario,
+        'tipo_evento' => $tipoEvento,
+        'http_code' => $httpCode
+    ]);
+    exit;
+}
 
 // Rota de Upload de Arquivos
 if (strpos($uri, '/api/upload') !== false && $method === 'POST') {
@@ -273,11 +405,22 @@ if (strpos($uri, '/api/submit') !== false || strpos($uri, '/api/draft') !== fals
 // Rota de Consulta de Dados
 if (preg_match('#/api/get/([^/]+)#', $uri, $m)) {
     $token = $m[1];
+    // Validação estrita de formato de token (Anti-Injeção e Anti-Enumeração)
+    if (!preg_match('/^[a-zA-Z0-9_\-]{8,64}$/', $token)) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Token inválido']);
+        exit;
+    }
+
     if ($pdo) {
         $stmt = $pdo->prepare("SELECT * FROM submissions WHERE view_token = ? OR edit_token = ? LIMIT 1");
         $stmt->execute([$token, $token]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         if ($row) {
+            // Se foi consultado via view_token, remove o edit_token para não vazar a permissão de edição
+            if ($token === $row['view_token']) {
+                unset($row['edit_token']);
+            }
             // Decodifica JSONs
             foreach (['tipo_demanda', 'plano_contratado', 'faturamento_mensal_esperado', 'tera_pro_labore', 'regime_tributario', 'tabela_apuracao_anexo', 'frentes_acionadas', 'status_repasse', 'anexos_documentos'] as $col) {
                 $row[$col] = json_decode($row[$col] ?? '[]', true) ?: [];
