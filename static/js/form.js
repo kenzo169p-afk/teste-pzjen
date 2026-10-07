@@ -607,27 +607,71 @@ document.addEventListener('DOMContentLoaded', () => {
     const clientName = (data.cliente_razao_social || '').replace(/[^a-zA-Z0-9_-]/g, '_');
     const finalFilename = nomeArquivo || `PJzen_Handoff_${clientName || 'Registro'}.pdf`;
 
-    if (window.html2pdf) {
-      showToast('Gerando documento PDF oficial...', 'normal');
-      // Função auxiliar para renderizar documento limpo
-      const wrap = document.createElement('div');
-      wrap.style.cssText = 'position: absolute; left: -9999px; top: 0; width: 794px; background: #ffffff; color: #1e293b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 11px; line-height: 1.4; padding: 24px 30px; box-sizing: border-box;';
+    if (!window.html2pdf) {
+      window.print();
+      return;
+    }
 
-      const esc = (s) => (s ? String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') : '');
-      const cbStr = (opts, sel) => {
-        const set = new Set(Array.isArray(sel) ? sel : (typeof sel === 'string' ? [sel] : []));
-        return opts.map(o => {
-          const chk = set.has(o);
-          return `<span style="display: inline-block; margin-right: 14px; margin-bottom: 4px; ${chk ? 'font-weight: 700; color: #0f172a;' : 'color: #475569;'}">${chk ? '<b style="color: #003383;">[✔]</b>' : '<span style="color: #94a3b8;">[ &nbsp; ]</span>'} ${esc(o)}</span>`;
-        }).join('');
-      };
+    showToast('Gerando documento PDF oficial...', 'normal');
 
-      const now = new Date();
-      const dataFormatada = now.toLocaleDateString('pt-BR') + ' às ' + now.toLocaleTimeString('pt-BR').substring(0, 5);
+    // Overlay visível temporário para que o html2canvas capture todo o conteúdo perfeitamente
+    const overlay = document.createElement('div');
+    overlay.id = 'pjzen-pdf-render-overlay-form';
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.90);
+      z-index: 999999;
+      overflow-y: auto;
+      overflow-x: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 10px;
+      box-sizing: border-box;
+    `;
 
-      wrap.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 14px; border-bottom: 2px solid #003383; padding-bottom: 10px; margin-bottom: 10px;">
-          <img src="/static/img/logo.png" alt="Logo" style="width: 44px; height: 44px; object-fit: contain;" onerror="this.style.display='none';">
+    const banner = document.createElement('div');
+    banner.style.cssText = `
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      text-align: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #003383;
+      padding: 8px 18px;
+      border-radius: 6px;
+      border-left: 4px solid #FFD100;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    `;
+    banner.textContent = '📄 Preparando e baixando PDF oficial da PJzen...';
+    overlay.appendChild(banner);
+
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'width: 794px; min-width: 794px; background: #ffffff; color: #1e293b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 11px; line-height: 1.4; padding: 24px 30px; box-sizing: border-box; margin: 0 auto;';
+
+    const esc = (s) => (s ? String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') : '');
+    const cbStr = (opts, sel) => {
+      const set = new Set(Array.isArray(sel) ? sel : (typeof sel === 'string' ? [sel] : []));
+      return opts.map(o => {
+        const chk = set.has(o);
+        return `<span style="display: inline-block; margin-right: 14px; margin-bottom: 4px; ${chk ? 'font-weight: 700; color: #0f172a;' : 'color: #475569;'}">${chk ? '<b style="color: #003383;">[✔]</b>' : '<span style="color: #94a3b8;">[ &nbsp; ]</span>'} ${esc(o)}</span>`;
+      }).join('');
+    };
+
+    const existingLogo = document.querySelector('.brand-logo');
+    const logoSrc = (existingLogo && existingLogo.src) ? existingLogo.src : 'static/img/logo.png';
+
+    const now = new Date();
+    const dataFormatada = now.toLocaleDateString('pt-BR') + ' às ' + now.toLocaleTimeString('pt-BR').substring(0, 5);
+
+    wrap.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 14px; border-bottom: 2px solid #003383; padding-bottom: 10px; margin-bottom: 10px;">
+        <img src="${logoSrc}" alt="Logo" style="width: 44px; height: 44px; object-fit: contain;" onerror="this.style.display='none';">
           <div>
             <div style="font-size: 14px; font-weight: 800; color: #003383;">PJzen | HANDOFF COMERCIAL → ONBOARDING & OPERAÇÃO</div>
             <div style="font-size: 9px; color: #475569; font-style: italic;">Diagnóstico de entrada • preencher antes de transferir o cliente</div>
@@ -764,14 +808,26 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
 
-      document.body.appendChild(wrap);
+      overlay.appendChild(wrap);
+      document.body.appendChild(overlay);
+
+      // Aguardar renderização no DOM
+      await new Promise(r => setTimeout(r, 200));
+
       const opt = {
         margin: [8, 8, 8, 8],
         filename: finalFilename,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          logging: false,
+          scrollY: 0,
+          scrollX: 0,
+          windowWidth: 1024
+        },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+        pagebreak: { mode: ['css', 'legacy'] }
       };
 
       try {
@@ -779,14 +835,12 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('PDF oficial baixado com sucesso!', 'success');
       } catch (err) {
         console.error('Erro html2pdf:', err);
+        showToast('Abrindo diálogo de impressão para salvar em PDF...', 'normal');
         window.print();
       } finally {
-        wrap.remove();
+        overlay.remove();
       }
-    } else {
-      window.print();
-    }
-  };
+    };
 
   // Open / Close Email Config Modal
   const emailCfgModal = document.getElementById('email-config-modal');

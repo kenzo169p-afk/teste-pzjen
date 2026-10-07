@@ -498,10 +498,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const wrap = document.createElement('div');
     wrap.id = 'pjzen-pdf-render-temp';
     wrap.style.cssText = `
-      position: absolute;
-      left: -9999px;
-      top: 0;
       width: 794px;
+      min-width: 794px;
       background: #ffffff;
       color: #1e293b;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -509,7 +507,7 @@ document.addEventListener('DOMContentLoaded', () => {
       line-height: 1.4;
       padding: 24px 30px;
       box-sizing: border-box;
-      z-index: -999;
+      margin: 0 auto;
     `;
 
     function renderCheckboxes(opts, selected) {
@@ -574,10 +572,13 @@ document.addEventListener('DOMContentLoaded', () => {
       `).join('');
     }
 
+    const existingLogo = document.querySelector('.brand-logo');
+    const logoSrc = (existingLogo && existingLogo.src) ? existingLogo.src : 'static/img/logo.png';
+
     wrap.innerHTML = `
       <!-- Header Oficial -->
       <div style="display: flex; align-items: center; gap: 14px; border-bottom: 2px solid #003383; padding-bottom: 10px; margin-bottom: 10px;">
-        <img src="static/img/logo.png" alt="PJzen Logo" style="width: 44px; height: 44px; object-fit: contain;" onerror="this.style.display='none';">
+        <img src="${logoSrc}" alt="PJzen Logo" style="width: 44px; height: 44px; object-fit: contain;" onerror="this.style.display='none';">
         <div>
           <div style="font-size: 14px; font-weight: 800; color: #003383; letter-spacing: 0.3px;">
             PJzen | HANDOFF COMERCIAL → ONBOARDING & OPERAÇÃO
@@ -688,31 +689,83 @@ document.addEventListener('DOMContentLoaded', () => {
       filename = `PJzen_Handoff_${clientName || 'Registro'}.pdf`;
     }
 
-    if (window.html2pdf) {
-      showToast('Gerando documento PDF oficial...', 'normal');
-      const printableEl = generatePrintablePdfElement(data);
-      document.body.appendChild(printableEl);
-
-      const opt = {
-        margin: [8, 8, 8, 8],
-        filename: filename,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-      };
-
-      try {
-        await html2pdf().set(opt).from(printableEl).save();
-        showToast('PDF oficial baixado com sucesso!', 'success');
-      } catch (err) {
-        console.error('Erro na exportação html2pdf:', err);
-        window.print();
-      } finally {
-        printableEl.remove();
-      }
-    } else {
+    if (!window.html2pdf) {
+      showToast('Abrindo diálogo para salvar PDF...', 'normal');
       window.print();
+      return;
+    }
+
+    showToast('Gerando documento PDF oficial...', 'normal');
+
+    // Overlay visível para que o html2canvas renderize tudo perfeitamente sem tela branca
+    const overlay = document.createElement('div');
+    overlay.id = 'pjzen-pdf-render-overlay';
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.90);
+      z-index: 999999;
+      overflow-y: auto;
+      overflow-x: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 10px;
+      box-sizing: border-box;
+    `;
+
+    const banner = document.createElement('div');
+    banner.style.cssText = `
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      text-align: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #003383;
+      padding: 8px 18px;
+      border-radius: 6px;
+      border-left: 4px solid #FFD100;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    `;
+    banner.textContent = '📄 Preparando e baixando PDF oficial da PJzen...';
+    overlay.appendChild(banner);
+
+    const printableEl = generatePrintablePdfElement(data);
+    overlay.appendChild(printableEl);
+    document.body.appendChild(overlay);
+
+    // Aguardar pintura completa no DOM
+    await new Promise(r => setTimeout(r, 200));
+
+    const opt = {
+      margin: [8, 8, 8, 8],
+      filename: filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        scrollY: 0,
+        scrollX: 0,
+        windowWidth: 1024
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'] }
+    };
+
+    try {
+      await html2pdf().set(opt).from(printableEl).save();
+      showToast('PDF oficial baixado com sucesso!', 'success');
+    } catch (err) {
+      console.error('Erro na exportação html2pdf:', err);
+      showToast('Abrindo diálogo de impressão para salvar em PDF...', 'normal');
+      window.print();
+    } finally {
+      overlay.remove();
     }
   }
 
