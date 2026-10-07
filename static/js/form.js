@@ -603,18 +603,186 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Geração de PDF no lado do cliente (fallback universal para celulares/tablets/hosts estáticos)
   window.gerarPdfCliente = async function(nomeArquivo = 'PJzen-Handoff.pdf') {
-    const el = document.querySelector('.container') || document.body;
+    const data = typeof collectFormData === 'function' ? collectFormData() : {};
+    const clientName = (data.cliente_razao_social || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const finalFilename = nomeArquivo || `PJzen_Handoff_${clientName || 'Registro'}.pdf`;
+
     if (window.html2pdf) {
-      showToast('Gerando PDF no seu dispositivo...', 'normal');
-      const opt = {
-        margin: [10, 8, 10, 8],
-        filename: nomeArquivo,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      showToast('Gerando documento PDF oficial...', 'normal');
+      // Função auxiliar para renderizar documento limpo
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'position: absolute; left: -9999px; top: 0; width: 794px; background: #ffffff; color: #1e293b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; font-size: 11px; line-height: 1.4; padding: 24px 30px; box-sizing: border-box;';
+
+      const esc = (s) => (s ? String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') : '');
+      const cbStr = (opts, sel) => {
+        const set = new Set(Array.isArray(sel) ? sel : (typeof sel === 'string' ? [sel] : []));
+        return opts.map(o => {
+          const chk = set.has(o);
+          return `<span style="display: inline-block; margin-right: 14px; margin-bottom: 4px; ${chk ? 'font-weight: 700; color: #0f172a;' : 'color: #475569;'}">${chk ? '<b style="color: #003383;">[✔]</b>' : '<span style="color: #94a3b8;">[ &nbsp; ]</span>'} ${esc(o)}</span>`;
+        }).join('');
       };
-      await html2pdf().set(opt).from(el).save();
-      showToast('PDF baixado com sucesso!', 'success');
+
+      const now = new Date();
+      const dataFormatada = now.toLocaleDateString('pt-BR') + ' às ' + now.toLocaleTimeString('pt-BR').substring(0, 5);
+
+      wrap.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 14px; border-bottom: 2px solid #003383; padding-bottom: 10px; margin-bottom: 10px;">
+          <img src="/static/img/logo.png" alt="Logo" style="width: 44px; height: 44px; object-fit: contain;" onerror="this.style.display='none';">
+          <div>
+            <div style="font-size: 14px; font-weight: 800; color: #003383;">PJzen | HANDOFF COMERCIAL → ONBOARDING & OPERAÇÃO</div>
+            <div style="font-size: 9px; color: #475569; font-style: italic;">Diagnóstico de entrada • preencher antes de transferir o cliente</div>
+          </div>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; background: #fdfcf9; border: 1px solid #e5e0d8; font-size: 9.5px;">
+          <tr>
+            <td style="width: 25%; padding: 4px 6px; border: 1px solid #e5e0d8;"><b>Nome de quem preencheu:</b></td>
+            <td style="width: 25%; padding: 4px 6px; border: 1px solid #e5e0d8; font-weight: 700;">${esc(data.nome_preenchedor) || 'Não informado'}</td>
+            <td style="width: 25%; padding: 4px 6px; border: 1px solid #e5e0d8;"><b>Status:</b></td>
+            <td style="width: 25%; padding: 4px 6px; border: 1px solid #e5e0d8; font-weight: 700; color: #003383;">Oficial (v${data.version || 1})</td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 6px; border: 1px solid #e5e0d8;"><b>E-mail do Registrador:</b></td>
+            <td style="padding: 4px 6px; border: 1px solid #e5e0d8;">${esc(data.email_preenchedor) || '—'}</td>
+            <td style="padding: 4px 6px; border: 1px solid #e5e0d8;"><b>Data da Venda:</b></td>
+            <td style="padding: 4px 6px; border: 1px solid #e5e0d8;">${esc(data.data_venda) || '—'}</td>
+          </tr>
+          <tr>
+            <td style="padding: 4px 6px; border: 1px solid #e5e0d8;"><b>Data do Registro:</b></td>
+            <td colspan="3" style="padding: 4px 6px; border: 1px solid #e5e0d8;">${dataFormatada}</td>
+          </tr>
+        </table>
+
+        <div style="page-break-inside: avoid; margin-bottom: 8px;">
+          <div style="background: #003383; border-left: 5px solid #FFD100; color: #fff; padding: 5px 8px; font-weight: 700; font-size: 11px;">01 IDENTIFICAÇÃO E CONTRATAÇÃO | Comercial</div>
+          <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; font-size: 10px;">
+            <tr>
+              <td style="width: 20%; padding: 5px 8px; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1;">Nome do cliente</td>
+              <td style="width: 30%; padding: 5px 8px; border: 1px solid #cbd5e1;">${esc(data.cliente_razao_social) || '—'}</td>
+              <td style="width: 20%; padding: 5px 8px; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1;">CNPJ (se houver)</td>
+              <td style="width: 30%; padding: 5px 8px; border: 1px solid #cbd5e1;">${esc(data.cnpj) || '—'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 8px; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1;">E-mail do novo cliente</td>
+              <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">${esc(data.email_cliente) || '—'}</td>
+              <td style="padding: 5px 8px; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1;">Telefone do novo cliente</td>
+              <td style="padding: 5px 8px; border: 1px solid #cbd5e1;">${esc(data.telefone_cliente) || '—'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 8px; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1;">Data do repasse</td>
+              <td colspan="3" style="padding: 5px 8px; border: 1px solid #cbd5e1;">${esc(data.data_repasse) || '—'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 8px; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1;">Tipo de demanda</td>
+              <td colspan="3" style="padding: 5px 8px; border: 1px solid #cbd5e1;">${cbStr(['Abertura', 'Troca de contador', 'Regularização / outro'], data.tipo_demanda)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 8px; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1;">Plano contratado</td>
+              <td colspan="3" style="padding: 5px 8px; border: 1px solid #cbd5e1;">${cbStr(['PJzen Plus', 'PJzen Pro', 'PJzen One'], data.plano_contratado)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 8px; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1;">Faturamento mensal</td>
+              <td colspan="3" style="padding: 5px 8px; border: 1px solid #cbd5e1;">${cbStr(['R$ 0 a R$ 25 mil', 'R$ 25.000,01 a R$ 50 mil', 'R$ 50.000,01 a R$ 200 mil'], data.faturamento_mensal_esperado)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 8px; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1;">Atividade principal</td>
+              <td colspan="3" style="padding: 5px 8px; border: 1px solid #cbd5e1;">${esc(data.atividade_cnae_municipio) || '—'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 8px; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1;">Atividades secundárias</td>
+              <td colspan="3" style="padding: 5px 8px; border: 1px solid #cbd5e1;">${esc(data.atividades_secundarias) || '—'}</td>
+            </tr>
+          </table>
+        </div>
+
+        <div style="page-break-inside: avoid; margin-bottom: 8px;">
+          <div style="background: #003383; border-left: 5px solid #FFD100; color: #fff; padding: 5px 8px; font-weight: 700; font-size: 11px;">02 DIAGNÓSTICO TRIBUTÁRIO | Time técnico</div>
+          <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; font-size: 10px;">
+            <tr>
+              <td style="width: 20%; padding: 5px 8px; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1;">Terá pró-labore?</td>
+              <td colspan="3" style="padding: 5px 8px; border: 1px solid #cbd5e1;">${cbStr(['Sim', 'Não', 'A definir'], data.tera_pro_labore)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 8px; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1;">Regime tributário</td>
+              <td colspan="3" style="padding: 5px 8px; border: 1px solid #cbd5e1;">${cbStr(['Lucro presumido', 'Simples nacional puro', 'Simples nacional híbrido'], data.regime_tributario || data.simples_nacional)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 8px; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1;">Tabelas e anexo</td>
+              <td colspan="3" style="padding: 5px 8px; border: 1px solid #cbd5e1;">${cbStr(['III', 'IV', 'V', 'V com Fator R', 'Lucro Presumido'], data.tabela_apuracao_anexo)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 8px; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1;">Pontos de atenção</td>
+              <td colspan="3" style="padding: 5px 8px; border: 1px solid #cbd5e1;">${esc(data.pontos_atencao_tecnicos) || '—'}</td>
+            </tr>
+          </table>
+        </div>
+
+        <div style="page-break-inside: avoid; margin-bottom: 8px;">
+          <div style="background: #003383; border-left: 5px solid #FFD100; color: #fff; padding: 5px 8px; font-weight: 700; font-size: 11px;">03 O QUE PRECISA SER FEITO | Comercial + Técnico</div>
+          <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; font-size: 10px;">
+            <tr>
+              <td style="width: 20%; padding: 5px 8px; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1;">Frentes acionadas</td>
+              <td colspan="3" style="padding: 5px 8px; border: 1px solid #cbd5e1;">${cbStr(['Legalização', 'Fiscal', 'Contábil', 'DP/RH', 'Financeiro', 'Outras'], data.frentes_acionadas)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 8px; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1;">Demandas acordadas</td>
+              <td colspan="3" style="padding: 5px 8px; border: 1px solid #cbd5e1;">${esc(data.demandas_acordadas) || '—'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 8px; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1;">Descrição documentos</td>
+              <td colspan="3" style="padding: 5px 8px; border: 1px solid #cbd5e1;">${esc(data.documentos_pendentes) || '—'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 8px; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1;">Prazo combinado</td>
+              <td colspan="3" style="padding: 5px 8px; border: 1px solid #cbd5e1;">${esc(data.prazo_combinado) || '—'}</td>
+            </tr>
+          </table>
+        </div>
+
+        <div style="page-break-inside: avoid; margin-bottom: 8px;">
+          <div style="background: #003383; border-left: 5px solid #FFD100; color: #fff; padding: 5px 8px; font-weight: 700; font-size: 11px;">04 VALIDAÇÃO DO REPASSE</div>
+          <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; font-size: 10px;">
+            <tr>
+              <td style="width: 20%; padding: 5px 8px; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1;">Onboarding</td>
+              <td style="width: 30%; padding: 5px 8px; border: 1px solid #cbd5e1;">${esc(data.responsavel_onboarding) || '—'}</td>
+              <td style="width: 20%; padding: 5px 8px; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1;">Técnico</td>
+              <td style="width: 30%; padding: 5px 8px; border: 1px solid #cbd5e1;">${esc(data.responsavel_tecnico) || '—'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 8px; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1;">Status</td>
+              <td colspan="3" style="padding: 5px 8px; border: 1px solid #cbd5e1;">${cbStr(['Completo para entrada', 'Pendente de informações', 'Exige alinhamento'], data.status_repasse)}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px 8px; font-weight: 700; background: #f8fafc; border: 1px solid #cbd5e1;">Próxima ação</td>
+              <td colspan="3" style="padding: 5px 8px; border: 1px solid #cbd5e1;">${esc(data.proxima_acao_resp_data) || '—'}</td>
+            </tr>
+          </table>
+        </div>
+
+        <div style="background: #fdfcf9; border: 1px solid #e5e0d8; border-left: 4px solid #003383; padding: 6px 10px; margin-top: 8px; font-weight: 700; font-size: 9.5px; color: #1e293b; page-break-inside: avoid;">
+          Regra de passagem: o onboarding confirma o recebimento e devolve dúvidas ao comercial antes de iniciar a execução.
+        </div>
+      `;
+
+      document.body.appendChild(wrap);
+      const opt = {
+        margin: [8, 8, 8, 8],
+        filename: finalFilename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+
+      try {
+        await html2pdf().set(opt).from(wrap).save();
+        showToast('PDF oficial baixado com sucesso!', 'success');
+      } catch (err) {
+        console.error('Erro html2pdf:', err);
+        window.print();
+      } finally {
+        wrap.remove();
+      }
     } else {
       window.print();
     }

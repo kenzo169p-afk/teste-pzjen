@@ -1,5 +1,6 @@
 import html
 import io
+import json
 from pathlib import Path
 from datetime import datetime
 from reportlab.lib.pagesizes import A4
@@ -54,9 +55,29 @@ def _format_val(val):
     return html.escape(str(val))
 
 
+def _parse_list(val):
+    if not val:
+        return []
+    if isinstance(val, list):
+        return val
+    if isinstance(val, str):
+        val = val.strip()
+        if (val.startswith("[") and val.endswith("]")) or (val.startswith("{") and val.endswith("}")):
+            try:
+                parsed = json.loads(val)
+                if isinstance(parsed, list):
+                    return parsed
+                return [parsed]
+            except Exception:
+                pass
+        return [val] if val else []
+    return []
+
+
 def _render_checkbox_group(all_options, selected_list, style):
     items = []
-    selected_set = set(selected_list or [])
+    selected_list = _parse_list(selected_list)
+    selected_set = set(selected_list)
     for opt in all_options:
         is_checked = opt in selected_set
         box = "<b>[X]</b>" if is_checked else "[ &nbsp; ]"
@@ -368,7 +389,7 @@ def generate_handoff_pdf(submission_data):
                 ["Lucro presumido", "Simples nacional puro", "Simples nacional híbrido"],
                 [
                     "Simples nacional puro" if v == "Puro" else ("Simples nacional híbrido" if v == "Híbrido" else v)
-                    for v in (submission_data.get("regime_tributario") or submission_data.get("simples_nacional") or [])
+                    for v in _parse_list(submission_data.get("regime_tributario") or submission_data.get("simples_nacional"))
                 ],
                 field_value_style
             )
@@ -420,10 +441,17 @@ def generate_handoff_pdf(submission_data):
         }
     ]
 
-    anexos = submission_data.get("anexos_documentos") or []
+    anexos = _parse_list(submission_data.get("anexos_documentos"))
     if anexos:
         anexo_paragraphs = []
         for a in anexos:
+            if isinstance(a, str):
+                try:
+                    a = json.loads(a)
+                except Exception:
+                    a = {"nome_original": a}
+            if not isinstance(a, dict):
+                continue
             nome = html.escape(str(a.get("nome_original", "Documento")))
             tipo = html.escape(str(a.get("tipo", "")))
             data_pc = html.escape(str(a.get("data_pc", "")))
@@ -432,11 +460,12 @@ def generate_handoff_pdf(submission_data):
             anexo_paragraphs.append(
                 f"• <b>{nome}</b> ({tipo}) - Registrado em: <b>{data_pc}</b> | Storage: {storage}<br/>&nbsp;&nbsp;<font color='#0047B9'><u>{url}</u></font>"
             )
-        sec3_rows.append({
-            "type": "full",
-            "label": "Documentos e mídias anexados (com data do PC)",
-            "val": Paragraph("<br/><br/>".join(anexo_paragraphs), field_value_style)
-        })
+        if anexo_paragraphs:
+            sec3_rows.append({
+                "type": "full",
+                "label": "Documentos e mídias anexados (com data do PC)",
+                "val": Paragraph("<br/><br/>".join(anexo_paragraphs), field_value_style)
+            })
 
     story.append(make_fields_table(sec3_rows))
     story.append(Spacer(1, 10))

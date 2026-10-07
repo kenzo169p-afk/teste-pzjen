@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentEditToken = editTokenParam || '';
   let currentViewToken = viewTokenParam || '';
   let currentVersion = 1;
+  let currentViewData = null;
   let attachmentsList = [];
 
   // 1. Auto-resize de Textareas
@@ -382,6 +383,14 @@ document.addEventListener('DOMContentLoaded', () => {
     currentEditToken = resData.edit_token;
     currentViewToken = resData.view_token;
     currentVersion = resData.version;
+    currentViewData = {
+      ...payload,
+      edit_token: currentEditToken,
+      view_token: currentViewToken,
+      version: currentVersion,
+      status_tecnico: 'rascunho',
+      updated_at: new Date().toISOString()
+    };
 
     window.history.replaceState({}, '', `?edit=${currentEditToken}`);
     showToast('Rascunho salvo com sucesso!', 'success');
@@ -424,6 +433,14 @@ document.addEventListener('DOMContentLoaded', () => {
     currentEditToken = resData.edit_token;
     currentViewToken = resData.view_token;
     currentVersion = resData.version;
+    currentViewData = {
+      ...payload,
+      edit_token: currentEditToken,
+      view_token: currentViewToken,
+      version: currentVersion,
+      status_tecnico: 'enviado',
+      submitted_at: new Date().toISOString()
+    };
 
     window.history.replaceState({}, '', `?edit=${currentEditToken}`);
     if (saveStatusText) saveStatusText.textContent = 'Gravado com sucesso!';
@@ -475,24 +492,231 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 15. Geração de PDF no Aparelho (iOS, Android, Windows, Mac)
-  async function downloadPdfDirect(filename = 'PJzen-Handoff.pdf') {
-    const el = document.querySelector('.container') || document.body;
+  // 15. Geração de PDF Oficial no Aparelho (iOS, Android, Windows, Mac)
+  function generatePrintablePdfElement(data) {
+    const d = data || {};
+    const wrap = document.createElement('div');
+    wrap.id = 'pjzen-pdf-render-temp';
+    wrap.style.cssText = `
+      position: absolute;
+      left: -9999px;
+      top: 0;
+      width: 794px;
+      background: #ffffff;
+      color: #1e293b;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 11px;
+      line-height: 1.4;
+      padding: 24px 30px;
+      box-sizing: border-box;
+      z-index: -999;
+    `;
+
+    function renderCheckboxes(opts, selected) {
+      const set = new Set(Array.isArray(selected) ? selected : (typeof selected === 'string' ? [selected] : []));
+      return opts.map(opt => {
+        const checked = set.has(opt);
+        const checkMark = checked 
+          ? '<b style="color: #003383; font-size: 12px;">[✔]</b>' 
+          : '<span style="color: #94a3b8; font-size: 12px;">[ &nbsp; ]</span>';
+        const labelStyle = checked ? 'font-weight: 700; color: #0f172a;' : 'color: #475569;';
+        return `<span style="display: inline-block; margin-right: 14px; margin-bottom: 4px; ${labelStyle}">${checkMark} ${escapeHtml(opt)}</span>`;
+      }).join('');
+    }
+
+    function row2Col(l1, v1, l2, v2) {
+      return `
+        <tr>
+          <td style="width: 20%; padding: 6px 8px; font-weight: 700; color: #1e293b; background: #f8fafc; border: 1px solid #cbd5e1; font-size: 10px;">${l1}</td>
+          <td style="width: 30%; padding: 6px 8px; color: ${v1 ? '#0f172a' : '#94a3b8'}; border: 1px solid #cbd5e1; font-size: 10px;">${escapeHtml(v1) || '—'}</td>
+          <td style="width: 20%; padding: 6px 8px; font-weight: 700; color: #1e293b; background: #f8fafc; border: 1px solid #cbd5e1; font-size: 10px;">${l2}</td>
+          <td style="width: 30%; padding: 6px 8px; color: ${v2 ? '#0f172a' : '#94a3b8'}; border: 1px solid #cbd5e1; font-size: 10px;">${escapeHtml(v2) || '—'}</td>
+        </tr>
+      `;
+    }
+
+    function rowFull(label, contentHtml, isRawHtml = false) {
+      const valHtml = isRawHtml ? contentHtml : (escapeHtml(contentHtml) || '<span style="color: #94a3b8;">—</span>');
+      return `
+        <tr>
+          <td style="width: 20%; padding: 6px 8px; font-weight: 700; color: #1e293b; background: #f8fafc; border: 1px solid #cbd5e1; font-size: 10px; vertical-align: top;">${label}</td>
+          <td colspan="3" style="width: 80%; padding: 6px 8px; color: #0f172a; border: 1px solid #cbd5e1; font-size: 10px; vertical-align: top;">${valHtml}</td>
+        </tr>
+      `;
+    }
+
+    function sectionHeader(title) {
+      return `
+        <div style="background: #003383; border-left: 5px solid #FFD100; color: #ffffff; padding: 6px 10px; font-weight: 700; font-size: 11px; letter-spacing: 0.3px; margin-top: 12px; margin-bottom: 0;">
+          ${title}
+        </div>
+      `;
+    }
+
+    let dataEnvioFormatada = '—';
+    if (d.submitted_at) {
+      dataEnvioFormatada = d.submitted_at.replace('T', ' às ').substring(0, 19);
+    } else if (d.updated_at) {
+      dataEnvioFormatada = d.updated_at.replace('T', ' às ').substring(0, 19) + ' (Rascunho)';
+    } else {
+      const now = new Date();
+      dataEnvioFormatada = now.toLocaleDateString('pt-BR') + ' às ' + now.toLocaleTimeString('pt-BR').substring(0, 5);
+    }
+
+    let anexosHtml = '<span style="color: #94a3b8;">Nenhum anexo registrado</span>';
+    const anexos = Array.isArray(d.anexos_documentos) ? d.anexos_documentos : [];
+    if (anexos.length > 0) {
+      anexosHtml = anexos.map(a => `
+        <div style="margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px dashed #e2e8f0;">
+          • <b>${escapeHtml(a.nome_original || 'Documento')}</b> (${escapeHtml(a.tipo || '')}) — Registrado em: <b>${escapeHtml(a.data_pc || '')}</b> | ${escapeHtml(a.storage || 'Supabase')}<br/>
+          &nbsp;&nbsp;<a href="${escapeHtml(a.url || '')}" style="color: #0047B9; font-size: 9px; text-decoration: underline;" target="_blank">${escapeHtml(a.url || '')}</a>
+        </div>
+      `).join('');
+    }
+
+    wrap.innerHTML = `
+      <!-- Header Oficial -->
+      <div style="display: flex; align-items: center; gap: 14px; border-bottom: 2px solid #003383; padding-bottom: 10px; margin-bottom: 10px;">
+        <img src="static/img/logo.png" alt="PJzen Logo" style="width: 44px; height: 44px; object-fit: contain;" onerror="this.style.display='none';">
+        <div>
+          <div style="font-size: 14px; font-weight: 800; color: #003383; letter-spacing: 0.3px;">
+            PJzen | HANDOFF COMERCIAL → ONBOARDING & OPERAÇÃO
+          </div>
+          <div style="font-size: 9px; color: #475569; font-style: italic; margin-top: 2px;">
+            Diagnóstico de entrada • preencher antes de transferir o cliente
+          </div>
+        </div>
+      </div>
+
+      <!-- Meta Card Resumo -->
+      <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; background: #fdfcf9; border: 1px solid #e5e0d8; font-size: 9.5px;">
+        <tr>
+          <td style="width: 25%; padding: 4px 6px; border: 1px solid #e5e0d8;"><b>Nome de quem preencheu:</b></td>
+          <td style="width: 25%; padding: 4px 6px; border: 1px solid #e5e0d8; font-weight: 700;">${escapeHtml(d.nome_preenchedor) || 'Não informado'}</td>
+          <td style="width: 25%; padding: 4px 6px; border: 1px solid #e5e0d8;"><b>Status Técnico:</b></td>
+          <td style="width: 25%; padding: 4px 6px; border: 1px solid #e5e0d8; font-weight: 700; color: #003383;">${(d.status_tecnico === 'rascunho' ? 'Rascunho' : 'Enviado')} (v${d.version || 1})</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 6px; border: 1px solid #e5e0d8;"><b>E-mail do Registrador:</b></td>
+          <td style="padding: 4px 6px; border: 1px solid #e5e0d8;">${escapeHtml(d.email_preenchedor) || '—'}</td>
+          <td style="padding: 4px 6px; border: 1px solid #e5e0d8;"><b>Data da Venda:</b></td>
+          <td style="padding: 4px 6px; border: 1px solid #e5e0d8;">${escapeHtml(d.data_venda) || '—'}</td>
+        </tr>
+        <tr>
+          <td style="padding: 4px 6px; border: 1px solid #e5e0d8;"><b>Data do Registro:</b></td>
+          <td colspan="3" style="padding: 4px 6px; border: 1px solid #e5e0d8;">${dataEnvioFormatada}</td>
+        </tr>
+      </table>
+
+      <!-- 01 IDENTIFICAÇÃO E CONTRATAÇÃO -->
+      <div style="page-break-inside: avoid; break-inside: avoid; margin-bottom: 8px;">
+        ${sectionHeader('01 IDENTIFICAÇÃO E CONTRATAÇÃO | Comercial')}
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1;">
+          ${row2Col('Nome do cliente', d.cliente_razao_social, 'CNPJ (se houver)', d.cnpj)}
+          ${row2Col('E-mail do novo cliente', d.email_cliente, 'Telefone do novo cliente', d.telefone_cliente)}
+          ${rowFull('Data do repasse', d.data_repasse)}
+          ${rowFull('Tipo de demanda', renderCheckboxes(['Abertura', 'Troca de contador', 'Regularização / outro'], d.tipo_demanda), true)}
+          ${rowFull('Plano contratado', renderCheckboxes(['PJzen Plus', 'PJzen Pro', 'PJzen One'], d.plano_contratado), true)}
+          ${rowFull('Faturamento mensal esperado', renderCheckboxes(['R$ 0 a R$ 25 mil', 'R$ 25.000,01 a R$ 50 mil', 'R$ 50.000,01 a R$ 200 mil'], d.faturamento_mensal_esperado), true)}
+          ${rowFull('Atividade principal / CNAE e município', d.atividade_cnae_municipio)}
+          ${rowFull('Atividades secundárias', d.atividades_secundarias)}
+        </table>
+      </div>
+
+      <!-- 02 DIAGNÓSTICO TRIBUTÁRIO -->
+      <div style="page-break-inside: avoid; break-inside: avoid; margin-bottom: 8px;">
+        ${sectionHeader('02 DIAGNÓSTICO TRIBUTÁRIO | Time técnico')}
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1;">
+          ${rowFull('Terá pró-labore?', renderCheckboxes(['Sim', 'Não', 'A definir'], d.tera_pro_labore), true)}
+          ${rowFull('Regime tributário', renderCheckboxes(['Lucro presumido', 'Simples nacional puro', 'Simples nacional híbrido'], d.regime_tributario || d.simples_nacional), true)}
+          ${rowFull('Tabelas e anexo', renderCheckboxes(['III', 'IV', 'V', 'V com Fator R', 'Lucro Presumido'], d.tabela_apuracao_anexo), true)}
+          ${rowFull('Pontos de atenção técnicos / premissas da análise', d.pontos_atencao_tecnicos)}
+        </table>
+      </div>
+
+      <!-- 03 O QUE PRECISA SER FEITO -->
+      <div style="page-break-inside: avoid; break-inside: avoid; margin-bottom: 8px;">
+        ${sectionHeader('03 O QUE PRECISA SER FEITO | Comercial + Técnico')}
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1;">
+          ${rowFull('Frentes acionadas', renderCheckboxes(['Legalização', 'Fiscal', 'Contábil', 'DP/RH', 'Financeiro', 'Outras'], d.frentes_acionadas), true)}
+          ${rowFull('Demandas acordadas, pendências e entregáveis', d.demandas_acordadas)}
+          ${rowFull('Descrição de documentos anexados', d.documentos_pendentes)}
+          ${rowFull('Prazo combinado com o cliente', d.prazo_combinado)}
+          ${anexos.length > 0 ? rowFull('Documentos e mídias anexados', anexosHtml, true) : ''}
+        </table>
+      </div>
+
+      <!-- 04 VALIDAÇÃO DO REPASSE -->
+      <div style="page-break-inside: avoid; break-inside: avoid; margin-bottom: 8px;">
+        ${sectionHeader('04 VALIDAÇÃO DO REPASSE')}
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1;">
+          ${row2Col('Responsável pelo onboarding', d.responsavel_onboarding, 'Responsável técnico', d.responsavel_tecnico)}
+          ${rowFull('Status', renderCheckboxes(['Completo para entrada', 'Pendente de informações', 'Exige alinhamento'], d.status_repasse), true)}
+          ${rowFull('Próxima ação / responsável / data', d.proxima_acao_resp_data)}
+        </table>
+      </div>
+
+      <!-- Regra de Passagem -->
+      <div style="background: #fdfcf9; border: 1px solid #e5e0d8; border-left: 4px solid #003383; padding: 6px 10px; margin-top: 8px; margin-bottom: 10px; font-weight: 700; font-size: 9.5px; color: #1e293b; page-break-inside: avoid; break-inside: avoid;">
+        Regra de passagem: o onboarding confirma o recebimento e devolve dúvidas ao comercial antes de iniciar a execução.
+      </div>
+
+      <!-- Rodapé Oficial -->
+      <div style="border-top: 1px solid #e2e8f0; padding-top: 5px; display: flex; justify-content: space-between; font-size: 8px; color: #64748b;">
+        <span>PJzen | Handoff Oficial Comercial → Operação</span>
+        <span>Documento oficial gerado em ${new Date().toLocaleDateString('pt-BR')}</span>
+      </div>
+    `;
+
+    return wrap;
+  }
+
+  async function downloadPdfDirect(customDataOrFilename) {
+    let data = null;
+    let filename = 'PJzen-Handoff.pdf';
+
+    if (typeof customDataOrFilename === 'object' && customDataOrFilename !== null) {
+      data = customDataOrFilename;
+      const clientName = (data.cliente_razao_social || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+      filename = `PJzen_Handoff_${clientName || 'Registro'}.pdf`;
+    } else if (typeof customDataOrFilename === 'string') {
+      filename = customDataOrFilename;
+      data = currentViewData || (typeof collectFormData === 'function' ? collectFormData() : {});
+    } else {
+      data = currentViewData || (typeof collectFormData === 'function' ? collectFormData() : {});
+      const clientName = (data.cliente_razao_social || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+      filename = `PJzen_Handoff_${clientName || 'Registro'}.pdf`;
+    }
+
     if (window.html2pdf) {
-      showToast('Gerando PDF no seu aparelho...', 'normal');
+      showToast('Gerando documento PDF oficial...', 'normal');
+      const printableEl = generatePrintablePdfElement(data);
+      document.body.appendChild(printableEl);
+
       const opt = {
-        margin: [10, 8, 10, 8],
+        margin: [8, 8, 8, 8],
         filename: filename,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
       };
-      await html2pdf().set(opt).from(el).save();
-      showToast('PDF baixado com sucesso!', 'success');
+
+      try {
+        await html2pdf().set(opt).from(printableEl).save();
+        showToast('PDF oficial baixado com sucesso!', 'success');
+      } catch (err) {
+        console.error('Erro na exportação html2pdf:', err);
+        window.print();
+      } finally {
+        printableEl.remove();
+      }
     } else {
       window.print();
     }
   }
+
+  window.downloadPdfDirectGlobal = (customData) => downloadPdfDirect(customData);
 
   if (btnDirectPdf) {
     btnDirectPdf.addEventListener('click', () => downloadPdfDirect());
@@ -696,7 +920,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="action-buttons">
           <a href="${editUrl}" class="btn btn-secondary">Editar Informações</a>
           <a href="${docUrl}" class="btn btn-secondary">Ver Dossiê</a>
-          <button type="button" class="btn btn-pdf" onclick="downloadPdfDirect('Handoff-${sub.cliente_razao_social || 'PJzen'}.pdf')">Baixar PDF</button>
+          <button type="button" class="btn btn-pdf" onclick="window.downloadPdfDirectGlobal()">Baixar PDF</button>
           <button type="button" class="btn btn-secondary" onclick="window.print()">Imprimir</button>
         </div>
       </div>
